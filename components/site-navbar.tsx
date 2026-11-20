@@ -1,12 +1,13 @@
 "use client"
 
+import { Menu as AccountMenu } from "@base-ui/react/menu"
 import { Popover } from "@base-ui/react/popover"
 import { ChevronDown, Menu } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
-import { useSession } from "@/lib/auth-client"
+import { authClient, useSession } from "@/lib/auth-client"
 
 const links = [
   { href: "/courses", label: "Our courses" },
@@ -16,6 +17,96 @@ const links = [
 
 const menuLinkClass =
   "block rounded-lg px-3 py-2.5 font-medium hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
+
+function AccountDropdown({
+  userName,
+  onNavigate,
+}: {
+  userName: string
+  onNavigate?: () => void
+}) {
+  const [signingOut, setSigningOut] = useState(false)
+  const [error, setError] = useState(false)
+  const itemClass =
+    "block cursor-pointer rounded-lg px-3 py-2.5 text-sm font-medium outline-none data-highlighted:bg-muted"
+
+  async function handleSignOut() {
+    if (signingOut) return
+    setSigningOut(true)
+    setError(false)
+
+    try {
+      const result = await authClient.signOut()
+      if (result.error) {
+        setError(true)
+        return
+      }
+      onNavigate?.()
+    } catch {
+      setError(true)
+    } finally {
+      setSigningOut(false)
+    }
+  }
+
+  return (
+    <AccountMenu.Root
+      onOpenChange={(open) => {
+        if (!open) setError(false)
+      }}
+    >
+      <AccountMenu.Trigger
+        render={<Button variant="outline" />}
+        className="col-span-2 h-11 max-w-full min-w-0 gap-2 px-3"
+      >
+        <span className="truncate">Welcome {userName}</span>
+        <ChevronDown aria-hidden="true" className="size-4" />
+      </AccountMenu.Trigger>
+      <AccountMenu.Portal>
+        <AccountMenu.Positioner
+          align="end"
+          sideOffset={8}
+          collisionPadding={12}
+          className="z-60"
+        >
+          <AccountMenu.Popup className="w-48 rounded-xl border bg-popover p-1.5 text-popover-foreground shadow-lg">
+            <AccountMenu.LinkItem
+              render={
+                <Link href="/dashboard/profile" onNavigate={onNavigate} />
+              }
+              closeOnClick
+              className={itemClass}
+            >
+              Profile
+            </AccountMenu.LinkItem>
+            <AccountMenu.LinkItem
+              render={<Link href="/dashboard" onNavigate={onNavigate} />}
+              closeOnClick
+              className={itemClass}
+            >
+              Dashboard
+            </AccountMenu.LinkItem>
+            <AccountMenu.Separator className="my-1 border-t" />
+            <AccountMenu.Item
+              label="Sign Out"
+              disabled={signingOut}
+              closeOnClick={false}
+              onClick={handleSignOut}
+              className={`${itemClass} text-destructive data-disabled:cursor-wait data-disabled:opacity-60`}
+            >
+              {signingOut ? "Signing out…" : "Sign Out"}
+            </AccountMenu.Item>
+            {error && (
+              <p role="alert" className="px-3 py-2 text-xs text-destructive">
+                Couldn’t sign out. Try again.
+              </p>
+            )}
+          </AccountMenu.Popup>
+        </AccountMenu.Positioner>
+      </AccountMenu.Portal>
+    </AccountMenu.Root>
+  )
+}
 
 function AuthActions({
   userName,
@@ -27,11 +118,7 @@ function AuthActions({
   onNavigate?: () => void
 }) {
   if (userName !== undefined) {
-    return (
-      <p className="col-span-2 min-w-0 text-sm font-medium wrap-anywhere lg:text-right">
-        Welcome {userName}
-      </p>
-    )
+    return <AccountDropdown userName={userName} onNavigate={onNavigate} />
   }
 
   if (isPending) return null
@@ -123,7 +210,7 @@ export function SiteNavbar() {
           </Popover.Root>
         </nav>
 
-        <div className="hidden items-center gap-2 justify-self-end lg:flex">
+        <div className="hidden max-w-full min-w-0 items-center gap-2 justify-self-end lg:flex">
           <AuthActions userName={userName} isPending={isPending} />
         </div>
 
