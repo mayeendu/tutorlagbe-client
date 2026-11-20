@@ -13,7 +13,7 @@ import { authClient, useSession } from "@/lib/auth-client"
 const links = [
   { href: "/courses", label: "Our courses" },
   { href: "/teachers", label: "Our teachers" },
-  { href: "/learning-materials", label: "Learning materials" },
+  { href: "/learning-materials", label: "Learning Materials" },
 ]
 
 const menuLinkClass =
