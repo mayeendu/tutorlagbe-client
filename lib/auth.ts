@@ -5,7 +5,7 @@ import { mongodbAdapter } from "@better-auth/mongo-adapter"
 import { APIError, createAuthMiddleware } from "better-auth/api"
 import { minimumPasswordLength, registrationRole } from "@/lib/auth-validation"
 
-const client = new MongoClient("mongodb://localhost:27017/database")
+const client = new MongoClient(process.env.BETTER_AUTH_DB_URI as string)
 const db = client.db("tutorlagbe_db")
 
 export const auth = betterAuth({
