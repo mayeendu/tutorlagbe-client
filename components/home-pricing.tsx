@@ -19,8 +19,8 @@ const plans = [
   {
     name: "Plus",
     description: "Organize your search as you compare tuition options.",
-    price: "Coming soon",
-    priceDetail: "Pricing to be announced",
+    price: "$10",
+    priceDetail: "USD",
     icon: Layers3,
     features: [
       "Everything in Free",
@@ -31,8 +31,8 @@ const plans = [
   {
     name: "Pro",
     description: "Get priority booking or grow your tutoring practice.",
-    price: "$10 / $15",
-    priceDetail: "USD · Student / Tutor",
+    price: "$25",
+    priceDetail: "USD",
     icon: Sparkles,
     features: [
       "Everything in Free",
@@ -73,19 +73,19 @@ export function HomePricing() {
               icon: Icon,
               features,
             }) => {
-              const isPro = name === "Pro"
+              const isHighlighted = name === "Plus"
               return (
                 <article
                   key={name}
                   className={
-                    isPro
+                    isHighlighted
                       ? "flex h-full flex-col rounded-3xl border border-indigo-500 bg-linear-to-br from-indigo-800 to-indigo-950 p-6 text-white shadow-lg shadow-indigo-950/15 sm:p-8"
                       : "flex h-full flex-col rounded-3xl border bg-card p-6 text-card-foreground shadow-sm sm:p-8"
                   }
                 >
                   <div className="flex items-center gap-3">
                     <span
-                      className={`grid size-11 shrink-0 place-items-center rounded-xl ${isPro ? "bg-white/15 text-indigo-100" : "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300"}`}
+                      className={`grid size-11 shrink-0 place-items-center rounded-xl ${isHighlighted ? "bg-white/15 text-indigo-100" : "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300"}`}
                     >
                       <Icon aria-hidden="true" className="size-5" />
                     </span>
@@ -94,18 +94,18 @@ export function HomePricing() {
                     </h3>
                   </div>
                   <p
-                    className={`mt-4 lg:min-h-12 ${isPro ? "text-indigo-100" : "text-muted-foreground"}`}
+                    className={`mt-4 lg:min-h-12 ${isHighlighted ? "text-indigo-100" : "text-muted-foreground"}`}
                   >
                     {description}
                   </p>
                   <div
-                    className={`mt-6 border-b pb-6 ${isPro ? "border-white/20" : "border-border"}`}
+                    className={`mt-6 border-b pb-6 ${isHighlighted ? "border-white/20" : "border-border"}`}
                   >
                     <p className="text-3xl font-bold tracking-tight sm:text-4xl">
                       {price}
                     </p>
                     <p
-                      className={`mt-1 text-sm ${isPro ? "text-indigo-100" : "text-muted-foreground"}`}
+                      className={`mt-1 text-sm ${isHighlighted ? "text-indigo-100" : "text-muted-foreground"}`}
                     >
                       {priceDetail}
                     </p>
@@ -115,7 +115,7 @@ export function HomePricing() {
                       <li key={feature} className="flex items-start gap-3">
                         <Check
                           aria-hidden="true"
-                          className={`mt-0.5 size-4 shrink-0 ${isPro ? "text-amber-300" : "text-indigo-700 dark:text-indigo-300"}`}
+                          className={`mt-0.5 size-4 shrink-0 ${isHighlighted ? "text-amber-300" : "text-indigo-700 dark:text-indigo-300"}`}
                         />
                         {feature}
                       </li>
@@ -131,9 +131,11 @@ export function HomePricing() {
                     </Button>
                   ) : (
                     <p
-                      className={`mt-auto flex min-h-11 items-center justify-center rounded-lg px-3 text-center text-sm font-medium ${isPro ? "bg-white/10 text-indigo-50" : "bg-muted text-muted-foreground"}`}
+                      className={`mt-auto flex min-h-11 items-center justify-center rounded-lg px-3 text-center text-sm font-medium ${isHighlighted ? "bg-white/10 text-indigo-50" : "bg-muted text-muted-foreground"}`}
                     >
-                      {isPro ? "Checkout coming soon" : "Planned features"}
+                      {name === "Pro"
+                        ? "Checkout coming soon"
+                        : "Planned features"}
                     </p>
                   )}
                 </article>
