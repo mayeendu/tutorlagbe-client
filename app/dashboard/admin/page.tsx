@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation"
+import { DashboardOverview } from "@/components/dashboard-pages"
 
 export default function AdminDashboardPage() {
-  redirect("/dashboard/admin/tuitions")
+  return <DashboardOverview role="admin" />
 }

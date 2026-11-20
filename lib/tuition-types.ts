@@ -13,6 +13,8 @@ export type Tuition = {
 }
 
 export type TuitionPage = { items: Tuition[]; hasMore: boolean }
+export type ManagedTuition = Tuition & { approvalStatus: "pending" | "approved" | "rejected"; isActive: boolean; revision?: number }
+export type ManagedTuitionPage = { items: ManagedTuition[]; hasMore: boolean }
 
 export const tuitionFee = new Intl.NumberFormat("en-BD", {
   style: "currency",

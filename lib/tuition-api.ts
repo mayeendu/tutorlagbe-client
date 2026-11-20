@@ -1,4 +1,4 @@
-export function tuitionApiUrl(path = "") {
+export function apiUrl(path: string) {
   const origin = URL.parse(process.env.TUTORLAGBE_API_URL?.trim() ?? "")
   if (
     !origin || !["http:", "https:"].includes(origin.protocol) ||
@@ -6,14 +6,16 @@ export function tuitionApiUrl(path = "") {
     origin.search || origin.hash
   ) return null
 
-  return new URL(`/api/tuitions${path}`, origin)
+  origin.pathname = path
+  return origin
 }
 
 export async function readTuitions(path = "") {
-  const url = tuitionApiUrl(path)
+  const url = apiUrl("/api/tuitions")
   if (!url) return null
+  const target = new URL(`/api/tuitions${path}`, url)
   try {
-    return await fetch(url, {
+    return await fetch(target, {
       cache: "no-store",
       redirect: "error",
       signal: AbortSignal.timeout(7000),

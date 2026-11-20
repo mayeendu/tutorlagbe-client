@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
+import { PublicTuitionActions } from "@/components/managed-tuitions"
 import { readTuitions } from "@/lib/tuition-api"
 import { tuitionFee, type Tuition } from "@/lib/tuition-types"
 
@@ -26,6 +27,7 @@ export default async function TuitionDetails({ params }: PageProps<"/tuitions/[i
           </dl>
           <h2 className="text-xl font-semibold">About this tuition</h2>
           <p className="mt-3 whitespace-pre-wrap leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">{tuition.description}</p>
+          <PublicTuitionActions id={tuition.id} />
         </article>
       ) : <h1 className="mt-6 text-2xl font-semibold">Tuition details are temporarily unavailable.</h1>}
     </main>
