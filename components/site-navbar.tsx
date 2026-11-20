@@ -18,15 +18,24 @@ const links = [
 const menuLinkClass =
   "block rounded-lg px-3 py-2.5 font-medium hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
 
+type AccountUser = NonNullable<ReturnType<typeof useSession>["data"]>["user"]
+
+const roleNavigation = new Map([
+  ["admin", { label: "Admin", dashboard: "/dashboard/admin" }],
+  ["student", { label: "Student", dashboard: "/dashboard/student" }],
+  ["tutor", { label: "Tutor", dashboard: "/dashboard/tutor" }],
+])
+
 function AccountDropdown({
-  userName,
+  user,
   onNavigate,
 }: {
-  userName: string
+  user: AccountUser
   onNavigate?: () => void
 }) {
   const [signingOut, setSigningOut] = useState(false)
   const [error, setError] = useState(false)
+  const role = roleNavigation.get(user.role ?? "")
   const itemClass =
     "block cursor-pointer rounded-lg px-3 py-2.5 text-sm font-medium outline-none data-highlighted:bg-muted"
 
@@ -59,7 +68,14 @@ function AccountDropdown({
         render={<Button variant="outline" />}
         className="col-span-2 h-11 max-w-full min-w-0 gap-2 px-3"
       >
-        <span className="truncate">Welcome {userName}</span>
+        <span className="truncate">
+          Welcome, {user.name.trim().split(/\s+/)[0] || "there"}
+        </span>
+        {role && (
+          <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-800 dark:bg-indigo-950 dark:text-indigo-200">
+            {role.label}
+          </span>
+        )}
         <ChevronDown aria-hidden="true" className="size-4" />
       </AccountMenu.Trigger>
       <AccountMenu.Portal>
@@ -80,7 +96,12 @@ function AccountDropdown({
               Profile
             </AccountMenu.LinkItem>
             <AccountMenu.LinkItem
-              render={<Link href="/dashboard" onNavigate={onNavigate} />}
+              render={
+                <Link
+                  href={role?.dashboard ?? "/dashboard"}
+                  onNavigate={onNavigate}
+                />
+              }
               closeOnClick
               className={itemClass}
             >
@@ -109,16 +130,16 @@ function AccountDropdown({
 }
 
 function AuthActions({
-  userName,
+  user,
   isPending,
   onNavigate,
 }: {
-  userName?: string
+  user?: AccountUser
   isPending: boolean
   onNavigate?: () => void
 }) {
-  if (userName !== undefined) {
-    return <AccountDropdown userName={userName} onNavigate={onNavigate} />
+  if (user) {
+    return <AccountDropdown user={user} onNavigate={onNavigate} />
   }
 
   if (isPending) return null
@@ -147,7 +168,6 @@ function AuthActions({
 export function SiteNavbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const { data: session, isPending } = useSession()
-  const userName = session?.user.name
 
   return (
     <header className="border-b border-border bg-background">
@@ -211,7 +231,7 @@ export function SiteNavbar() {
         </nav>
 
         <div className="hidden max-w-full min-w-0 items-center gap-2 justify-self-end lg:flex">
-          <AuthActions userName={userName} isPending={isPending} />
+          <AuthActions user={session?.user} isPending={isPending} />
         </div>
 
         <div className="lg:hidden">
@@ -266,7 +286,7 @@ export function SiteNavbar() {
                   </nav>
                   <div className="mt-2 grid grid-cols-2 gap-2 border-t p-2 pt-3">
                     <AuthActions
-                      userName={userName}
+                      user={session?.user}
                       isPending={isPending}
                       onNavigate={() => setMobileOpen(false)}
                     />
