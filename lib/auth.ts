@@ -7,6 +7,8 @@ import { minimumPasswordLength, registrationRole } from "@/lib/auth-validation"
 
 const client = new MongoClient(process.env.BETTER_AUTH_DB_URI as string)
 const db = client.db("tutorlagbe_db")
+const googleClientId = process.env.GOOGLE_CLIENT_ID?.trim()
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET?.trim()
 
 export const auth = betterAuth({
   emailAndPassword: {
@@ -36,12 +38,10 @@ export const auth = betterAuth({
       }
     }),
   },
-  socialProviders: {
-    google: {
-      clientId: process.env.GOOGLE_CLIENT_ID as string,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-    },
-  },
+  socialProviders:
+    googleClientId && googleClientSecret
+      ? { google: { clientId: googleClientId, clientSecret: googleClientSecret } }
+      : {},
   database: mongodbAdapter(db, {
     client,
   }),

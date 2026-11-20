@@ -48,6 +48,8 @@
 }
 
 :root {
+    --hero-start: oklch(0.96 0.026 275);
+    --hero-end: oklch(0.97 0.035 88);
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);
@@ -83,6 +85,8 @@
 }
 
 .dark {
+    --hero-start: oklch(0.25 0.07 275);
+    --hero-end: oklch(0.25 0.045 70);
     --background: oklch(0.145 0 0);
     --foreground: oklch(0.985 0 0);
     --card: oklch(0.205 0 0);
@@ -126,4 +130,87 @@
   html {
     @apply font-sans;
     }
+}
+
+/* Page-specific styles for the shared marketing and auth layouts. */
+@layer utilities {
+  #main-content > main {
+    width: 100%;
+  }
+
+  section[aria-labelledby="home-hero-title"] {
+    padding: clamp(1rem, 2.5vw, 2rem) clamp(1rem, 4vw, 3rem);
+  }
+
+  section[aria-labelledby="home-hero-title"] > div {
+    gap: clamp(1.5rem, 4vw, 3.5rem);
+    padding: clamp(1.5rem, 5vw, 4.75rem);
+    border: 1px solid var(--border);
+    border-radius: clamp(1.25rem, 3vw, 2rem);
+    background: linear-gradient(135deg, var(--hero-start), var(--background) 58%, var(--hero-end));
+  }
+
+  #home-hero-title {
+    font-size: clamp(2.375rem, 6.1vw, 5rem);
+    letter-spacing: -0.055em;
+  }
+
+  section[aria-labelledby="home-hero-title"] > div > :last-child {
+    padding: 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 1.5rem;
+    background: var(--card);
+    box-shadow: 0 12px 32px oklch(0.18 0.06 275 / 12%);
+  }
+
+  section[aria-labelledby="home-hero-title"] > div > :last-child > [aria-hidden="true"] {
+    display: none;
+  }
+
+  section[aria-labelledby="home-hero-title"] > div > :last-child > :last-child {
+    border-radius: 1.125rem;
+    box-shadow: none;
+  }
+
+  :is(#recommended-courses, #popular-courses) + ul > li > article,
+  main:has(form[aria-label="Filter courses"]) li > article {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+  }
+
+  :is(#recommended-courses, #popular-courses) + ul > li > article > :last-child,
+  main:has(form[aria-label="Filter courses"]) li > article > :last-child {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+  }
+
+  :is(#recommended-courses, #popular-courses) + ul > li > article > :last-child > :last-child,
+  main:has(form[aria-label="Filter courses"]) li > article > :last-child > :last-child {
+    margin-top: auto;
+    padding-top: 1rem;
+  }
+
+  form[aria-label="Filter courses"] select {
+    min-width: 0;
+    width: 100%;
+    font-size: 1rem;
+  }
+
+  form[aria-label="Filter courses"] select:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  section[aria-labelledby="auth-title"] {
+    background: linear-gradient(165deg, var(--hero-start), var(--card) 36%);
+  }
+
+  @media (width >= 40rem) {
+    form[aria-label="Filter courses"] > label {
+      min-width: 0;
+      flex: 1 1 10rem;
+    }
+  }
 }
