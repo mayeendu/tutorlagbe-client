@@ -1,4 +1,5 @@
-import { BookOpen, GraduationCap, Presentation, Quote } from "lucide-react"
+import { Quote } from "lucide-react"
+import Image from "next/image"
 
 const stories = [
   {
@@ -6,21 +7,21 @@ const stories = [
       "I used to skip the hardest physics questions. Working through one problem at a time with a tutor helped me see where I was getting stuck and how to start the next one on my own.",
     role: "HSC student",
     context: "One-on-one physics tuition",
-    icon: GraduationCap,
+    avatar: "/testimonials/student.webp",
   },
   {
     quote:
       "We needed lessons that fit around school and evening activities. An online session made it easier to keep a regular study routine.",
     role: "Parent",
     context: "Online mathematics tuition",
-    icon: BookOpen,
+    avatar: "/testimonials/parent.webp",
   },
   {
     quote:
       "In a small group, I can give students time to explain their reasoning. That tells me much more than a correct answer alone.",
     role: "Tutor",
     context: "Small-group logic tuition",
-    icon: Presentation,
+    avatar: "/testimonials/tutor.webp",
   },
 ]
 
@@ -42,7 +43,7 @@ export function HomeTestimonials() {
         </p>
 
         <div className="mt-8 grid gap-4 lg:grid-cols-2 lg:gap-5">
-          {stories.map(({ quote, role, context, icon: Icon }, index) => {
+          {stories.map(({ quote, role, context, avatar }, index) => {
             const featured = index === 0
 
             return (
@@ -80,11 +81,13 @@ export function HomeTestimonials() {
                 <figcaption
                   className={`mt-auto flex items-center gap-3 border-t pt-4 ${featured ? "border-white/20" : "border-border"}`}
                 >
-                  <span
-                    className={`grid size-11 shrink-0 place-items-center rounded-full ${featured ? "bg-white/15 text-white" : "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300"}`}
-                  >
-                    <Icon aria-hidden="true" className="size-5" />
-                  </span>
+                  <Image
+                    src={avatar}
+                    alt=""
+                    width={48}
+                    height={48}
+                    className={`size-12 shrink-0 rounded-full object-cover ring-1 ${featured ? "ring-white/25" : "ring-border"}`}
+                  />
                   <div>
                     <p className="font-semibold">{role}</p>
                     <p
