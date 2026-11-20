@@ -6,6 +6,7 @@ import Link from "next/link"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { useSession } from "@/lib/auth-client"
 
 const links = [
   { href: "/courses", label: "Our courses" },
@@ -16,7 +17,25 @@ const links = [
 const menuLinkClass =
   "block rounded-lg px-3 py-2.5 font-medium hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
 
-function AuthLinks({ onNavigate }: { onNavigate?: () => void }) {
+function AuthActions({
+  userName,
+  isPending,
+  onNavigate,
+}: {
+  userName?: string
+  isPending: boolean
+  onNavigate?: () => void
+}) {
+  if (userName !== undefined) {
+    return (
+      <p className="col-span-2 min-w-0 text-sm font-medium wrap-anywhere lg:text-right">
+        Welcome {userName}
+      </p>
+    )
+  }
+
+  if (isPending) return null
+
   return (
     <>
       <Button
@@ -40,6 +59,8 @@ function AuthLinks({ onNavigate }: { onNavigate?: () => void }) {
 
 export function SiteNavbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const { data: session, isPending } = useSession()
+  const userName = session?.user.name
 
   return (
     <header className="border-b border-border bg-background">
@@ -103,7 +124,7 @@ export function SiteNavbar() {
         </nav>
 
         <div className="hidden items-center gap-2 justify-self-end lg:flex">
-          <AuthLinks />
+          <AuthActions userName={userName} isPending={isPending} />
         </div>
 
         <div className="lg:hidden">
@@ -157,7 +178,11 @@ export function SiteNavbar() {
                     </details>
                   </nav>
                   <div className="mt-2 grid grid-cols-2 gap-2 border-t p-2 pt-3">
-                    <AuthLinks onNavigate={() => setMobileOpen(false)} />
+                    <AuthActions
+                      userName={userName}
+                      isPending={isPending}
+                      onNavigate={() => setMobileOpen(false)}
+                    />
                   </div>
                 </Popover.Popup>
               </Popover.Positioner>
