@@ -2,6 +2,7 @@ import Image from "next/image"
 import Link from "next/link"
 
 import { HomeCourseSections } from "@/components/course-catalog"
+import { HomePricing } from "@/components/home-pricing"
 import { HomeTestimonials } from "@/components/home-testimonials"
 import { Button } from "@/components/ui/button"
 
@@ -65,6 +66,7 @@ export default function Page() {
       </section>
       <HomeCourseSections />
       <HomeTestimonials />
+      <HomePricing />
     </main>
   )
 }
