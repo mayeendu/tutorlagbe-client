@@ -6,6 +6,7 @@ import { ChevronDown, Menu } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
 
+import { SiteBrand } from "@/components/site-brand"
 import { Button } from "@/components/ui/button"
 import { authClient, useSession } from "@/lib/auth-client"
 
@@ -172,20 +173,7 @@ export function SiteNavbar() {
   return (
     <header className="border-b border-border bg-background">
       <div className="mx-auto grid max-w-400 grid-cols-[1fr_auto] items-center gap-4 px-4 py-3 sm:px-7 lg:min-h-22 lg:grid-cols-[1fr_auto_1fr] xl:px-10">
-        <Link
-          href="/"
-          className="inline-flex w-fit items-center gap-2.5 rounded-md focus-visible:outline-2 focus-visible:outline-ring"
-        >
-          <span
-            aria-hidden="true"
-            className="relative size-10 rounded-xl bg-indigo-700"
-          >
-            <span className="absolute top-3.5 left-2 h-3.5 w-2.5 skew-y-14 rounded-xs bg-white" />
-            <span className="absolute top-3.5 right-2 h-3.5 w-2.5 -skew-y-14 rounded-xs bg-white" />
-            <span className="absolute top-1.5 left-1/2 size-1.5 -translate-x-1/2 rounded-full bg-amber-300" />
-          </span>
-          <span className="text-2xl font-bold tracking-tight">Tutor Lagbe</span>
-        </Link>
+        <SiteBrand />
 
         <nav
           aria-label="Main navigation"
