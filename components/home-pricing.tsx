@@ -1,7 +1,9 @@
+
 import { Check, GraduationCap, Layers3, Sparkles } from "lucide-react"
 import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
+import { paidPlans } from "@/lib/paid-plans"
 
 const plans = [
   {
@@ -10,6 +12,8 @@ const plans = [
     price: "$0",
     priceDetail: "Free to join",
     icon: GraduationCap,
+    href: "/sign-up",
+    buttonText: "Create a free account",
     features: [
       "Browse online and in-person tuition",
       "Apply for lessons as a student",
@@ -22,6 +26,8 @@ const plans = [
     price: "$10",
     priceDetail: "USD",
     icon: Layers3,
+    href: "/payment?plan=plus",
+    buttonText: "Get Plus",
     features: [
       "Everything in Free",
       "Save a shortlist of tuition options",
@@ -29,16 +35,10 @@ const plans = [
     ],
   },
   {
-    name: "Pro",
-    description: "Get priority booking or grow your tutoring practice.",
-    price: "$25",
-    priceDetail: "USD",
+    ...paidPlans.pro,
     icon: Sparkles,
-    features: [
-      "Everything in Free",
-      "Priority booking for students",
-      "Unlimited tuition listings for tutors",
-    ],
+    href: "/payment?plan=pro",
+    buttonText: "Get Pro",
   },
 ]
 
@@ -57,6 +57,7 @@ export function HomePricing() {
           >
             Find your Tutor Lagbe plan
           </h2>
+
           <p className="mt-4 text-base leading-relaxed text-muted-foreground sm:text-lg">
             Start free as a student or tutor, and explore plans for when you
             need more.
@@ -72,8 +73,11 @@ export function HomePricing() {
               priceDetail,
               icon: Icon,
               features,
+              href,
+              buttonText,
             }) => {
               const isHighlighted = name === "Plus"
+
               return (
                 <article
                   key={name}
@@ -85,59 +89,78 @@ export function HomePricing() {
                 >
                   <div className="flex items-center gap-3">
                     <span
-                      className={`grid size-11 shrink-0 place-items-center rounded-xl ${isHighlighted ? "bg-white/15 text-indigo-100" : "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300"}`}
+                      className={`grid size-11 shrink-0 place-items-center rounded-xl ${isHighlighted
+                          ? "bg-white/15 text-indigo-100"
+                          : "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300"
+                        }`}
                     >
                       <Icon aria-hidden="true" className="size-5" />
                     </span>
+
                     <h3 className="text-2xl font-semibold tracking-tight">
                       {name}
                     </h3>
                   </div>
+
                   <p
-                    className={`mt-4 lg:min-h-12 ${isHighlighted ? "text-indigo-100" : "text-muted-foreground"}`}
+                    className={`mt-4 lg:min-h-12 ${isHighlighted
+                        ? "text-indigo-100"
+                        : "text-muted-foreground"
+                      }`}
                   >
                     {description}
                   </p>
+
                   <div
-                    className={`mt-6 border-b pb-6 ${isHighlighted ? "border-white/20" : "border-border"}`}
+                    className={`mt-6 border-b pb-6 ${isHighlighted
+                        ? "border-white/20"
+                        : "border-border"
+                      }`}
                   >
                     <p className="text-3xl font-bold tracking-tight sm:text-4xl">
                       {price}
                     </p>
+
                     <p
-                      className={`mt-1 text-sm ${isHighlighted ? "text-indigo-100" : "text-muted-foreground"}`}
+                      className={`mt-1 text-sm ${isHighlighted
+                          ? "text-indigo-100"
+                          : "text-muted-foreground"
+                        }`}
                     >
                       {priceDetail}
                     </p>
                   </div>
+
                   <ul className="mt-6 mb-8 space-y-3 text-sm sm:text-base">
                     {features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-3">
+                      <li
+                        key={feature}
+                        className="flex items-start gap-3"
+                      >
                         <Check
                           aria-hidden="true"
-                          className={`mt-0.5 size-4 shrink-0 ${isHighlighted ? "text-amber-300" : "text-indigo-700 dark:text-indigo-300"}`}
+                          className={`mt-0.5 size-4 shrink-0 ${isHighlighted
+                              ? "text-amber-300"
+                              : "text-indigo-700 dark:text-indigo-300"
+                            }`}
                         />
+
                         {feature}
                       </li>
                     ))}
                   </ul>
-                  {name === "Free" ? (
-                    <Button
-                      nativeButton={false}
-                      render={<Link href="/sign-up" />}
-                      className="mt-auto h-11 w-full bg-indigo-700 text-white hover:bg-indigo-800"
-                    >
-                      Create a free account
-                    </Button>
-                  ) : (
-                    <p
-                      className={`mt-auto flex min-h-11 items-center justify-center rounded-lg px-3 text-center text-sm font-medium ${isHighlighted ? "bg-white/10 text-indigo-50" : "bg-muted text-muted-foreground"}`}
-                    >
-                      {name === "Pro"
-                        ? "Checkout coming soon"
-                        : "Planned features"}
-                    </p>
-                  )}
+
+                  {/* Dynamic Pricing Button */}
+                  <Button
+                    nativeButton={false}
+                    render={<Link href={href} />}
+                    className={`mt-auto h-11 w-full ${isHighlighted
+                        ? "bg-white text-indigo-900 hover:bg-indigo-100"
+                        : "bg-indigo-700 text-white hover:bg-indigo-800"
+                      }`}
+                  >
+                    {buttonText}
+                  </Button>
                 </article>
               )
             }

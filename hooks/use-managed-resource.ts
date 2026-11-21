@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react"
 
 import { ApiError, authorizedRequest } from "@/lib/managed-api"
+import { notifyError } from "@/lib/notify"
 
-export function useManagedResource<T>(path: string | null, refreshInterval?: number) {
+export function useManagedResource<T>(path: string | null, refreshInterval?: number, showErrors = true) {
   const [result, setResult] = useState<{ path: string; data?: T; error?: ApiError }>()
   const [revision, setRevision] = useState(0)
   useEffect(() => {
@@ -28,9 +29,15 @@ export function useManagedResource<T>(path: string | null, refreshInterval?: num
       window.clearInterval(timer)
     }
   }, [path, refreshInterval, revision])
+  const error = path !== null && result?.path === path ? result.error : undefined
+  const message = error?.message
+  useEffect(() => {
+    if (showErrors && message) notifyError(undefined, message)
+  }, [message, showErrors])
+
   return {
     data: path && result?.path === path ? result.data : undefined,
-    error: path && result?.path === path ? result.error : undefined,
+    error,
     reload: () => { setResult(undefined); setRevision((value) => value + 1) },
   }
 }

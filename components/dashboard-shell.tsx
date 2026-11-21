@@ -6,6 +6,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState, type ReactNode } from "react"
 
+import { LoadingSkeleton } from "@/components/loading-skeleton"
 import { Button } from "@/components/ui/button"
 import { useManagedResource } from "@/hooks/use-managed-resource"
 import { useSession } from "@/lib/auth-client"
@@ -48,7 +49,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
     if (role && pathname === "/dashboard") router.replace(dashboardHref(role))
   }, [pathname, role, router])
 
-  if (isPending) return <main className="mx-auto max-w-4xl px-5 py-16"><p role="status">Checking your session…</p></main>
+  if (isPending) return <main className="mx-auto max-w-4xl px-5 py-16"><LoadingSkeleton label="Checking your session…" showHeading /></main>
   if (error) return <main className="mx-auto max-w-4xl px-5 py-16"><p role="alert">Your session could not be checked. Refresh and try again.</p></main>
   if (!user || !role) {
     return (
@@ -87,7 +88,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             <DashboardAvatar user={user} />
             <p className="font-semibold wrap-anywhere">{user.name}</p>
             <p className="text-sm text-muted-foreground">{dashboardRoles[role]}</p>
-            {role !== "admin" && <Link href="/pricing" className="text-sm font-semibold text-indigo-700 hover:underline dark:text-indigo-300">{plan === "pro" ? "Pro user" : plan === "free" ? "Free · View Pro plans" : "View plans"}</Link>}
+            {role !== "admin" && <Link href="/pricing" className="text-sm font-semibold text-indigo-700 hover:underline dark:text-indigo-300">{plan === "pro" ? "Pro user" : plan === "plus" ? "Plus user" : plan === "free" ? "Free · View Pro plans" : "View plans"}</Link>}
             <Link href="/dashboard/profile" aria-current={pathname === "/dashboard/profile" ? "page" : undefined} onClick={() => setMobileOpen(false)} className="mt-1 inline-flex min-h-10 items-center gap-2 rounded-lg border bg-background px-3 text-sm font-semibold hover:bg-muted aria-[current=page]:border-indigo-500">
               <UserRound aria-hidden="true" className="size-4" /> Profile
             </Link>
@@ -110,7 +111,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               <h1 className="text-2xl font-semibold">This dashboard belongs to another role</h1>
               <Link href={dashboardHref(role)} className="mt-4 inline-block font-semibold underline">Open your dashboard</Link>
             </div>
-          ) : pathname === "/dashboard" ? <p role="status">Opening your dashboard…</p> : children}
+          ) : pathname === "/dashboard" ? <LoadingSkeleton label="Opening your dashboard…" showHeading /> : children}
         </main>
       </div>
     </div>

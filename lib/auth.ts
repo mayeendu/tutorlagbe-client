@@ -16,6 +16,7 @@ export const auth = betterAuth({
     minPasswordLength: minimumPasswordLength,
   },
   user: {
+    modelName: process.env.TUTORLAGBE_USER_COLLECTION === "users" ? "users" : "user",
     additionalFields: {
       role: {
         type: "string",

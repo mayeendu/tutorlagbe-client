@@ -1,6 +1,8 @@
 import Link from "next/link"
 
 import { TuitionCard } from "@/components/tuition-card"
+import { TuitionFilterForm } from "@/components/tuition-filter-form"
+import { ToastFeedback } from "@/components/toast-feedback"
 import { readTuitions } from "@/lib/tuition-api"
 import type { TuitionPage } from "@/lib/tuition-types"
 
@@ -37,7 +39,7 @@ export default async function TuitionsPage({ searchParams }: PageProps<"/tuition
     <main className="mx-auto max-w-360 px-5 py-12 sm:px-8 lg:px-12">
       <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">Browse tuitions</h1>
       <p className="mt-3 text-muted-foreground">Find online or in-person lessons by subject and class level.</p>
-      <form action="/tuitions" method="get" aria-label="Filter tuitions" className="my-7 grid gap-4 rounded-2xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-5 lg:items-end">
+      <TuitionFilterForm action="/tuitions" aria-label="Filter tuitions" className="my-7 grid gap-4 rounded-2xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-5 lg:items-end">
         {fields.map(({ key, label, placeholder, max }) => (
           <label key={key} className="grid gap-1.5 text-sm font-medium">
             {label}
@@ -54,7 +56,8 @@ export default async function TuitionsPage({ searchParams }: PageProps<"/tuition
           <button type="submit" className="h-11 rounded-lg bg-indigo-700 px-4 font-semibold text-white hover:bg-indigo-800">Apply filters</button>
           {filters.size > 0 && <Link href="/tuitions" className="text-sm font-medium underline">Clear</Link>}
         </div>
-      </form>
+      </TuitionFilterForm>
+      {!results && <ToastFeedback message="Tuition listings are temporarily unavailable." />}
 
       {!results ? (
         <p className="rounded-2xl border bg-card p-6 text-muted-foreground">

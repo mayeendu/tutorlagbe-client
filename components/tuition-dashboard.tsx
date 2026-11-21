@@ -4,8 +4,10 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState, type FormEvent } from "react"
 import { toast } from "sonner"
 
+import { LoadingSkeleton } from "@/components/loading-skeleton"
 import { ImageUpload, uploadSelectedImage } from "@/components/image-upload"
 import { Button } from "@/components/ui/button"
+import { notifyError, notifyInvalidForm, notifySuccess } from "@/lib/notify"
 import { ApiError, authorizedRequest } from "@/lib/managed-api"
 import { tuitionFee, type ManagedTuition, type ManagedTuitionPage } from "@/lib/tuition-types"
 
@@ -37,11 +39,14 @@ export function TuitionForm({ item, onSaved, onCancel }: {
         daysPerWeek: Number(data.get("daysPerWeek")), description: data.get("description"),
         bannerImage,
       })
-      if (item && onSaved) onSaved(await response.json())
-      else {
+      if (item && onSaved) {
+        onSaved(await response.json())
+        notifySuccess("Tuition changes saved.")
+      } else {
         form.reset()
         setImageReset((value) => value + 1)
         setMessage({ error: false, text: "Tuition submitted for admin review." })
+        notifySuccess("Tuition submitted for admin review.")
       }
     } catch (error) {
       if (!item && error instanceof ApiError && error.status === 409 && error.code === "TUITION_LIMIT_REACHED") {
@@ -49,14 +54,14 @@ export function TuitionForm({ item, onSaved, onCancel }: {
         router.push("/pricing")
         return
       }
-      setMessage({ error: true, text: error instanceof Error ? error.message : "Could not submit tuition." })
+      setMessage({ error: true, text: notifyError(error, "Could not submit tuition.") })
     } finally {
       setPending(false)
     }
   }
 
   return (
-    <form onSubmit={submit} className="rounded-2xl border bg-card p-5 sm:p-7">
+    <form onSubmit={submit} onInvalid={notifyInvalidForm} className="rounded-2xl border bg-card p-5 sm:p-7">
       <fieldset disabled={pending} className="grid min-w-0 gap-4 sm:grid-cols-2">
         <label className={`${labelClass} sm:col-span-2`}>Title<input name="title" defaultValue={item?.title} className={inputClass} required minLength={3} maxLength={100} /></label>
         <label className={labelClass}>Subject<input name="subject" defaultValue={item?.subject} className={inputClass} required minLength={2} maxLength={60} /></label>
@@ -94,7 +99,7 @@ function ModerationQueue() {
         if (!controller.signal.aborted) setResults(items)
       })
       .catch((failure: Error) => {
-        if (!controller.signal.aborted) setError(failure.message)
+        if (!controller.signal.aborted) setError(notifyError(failure, "Could not load the moderation queue."))
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false)
@@ -116,10 +121,12 @@ function ModerationQueue() {
     setNotice("")
     try {
       await authorizedRequest(`/api/tuitions/${item.id}/moderation`, "PATCH", { status, revision: item.revision })
-      setNotice(status === "approved" ? "Tuition approved and visible in the catalog." : "Tuition rejected.")
+      const message = status === "approved" ? "Tuition approved and visible in the catalog." : "Tuition rejected."
+      setNotice(message)
+      notifySuccess(message)
       refresh(page)
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Could not moderate tuition.")
+      setError(notifyError(error, "Could not moderate tuition."))
     } finally {
       setListingId(undefined)
     }
@@ -129,7 +136,7 @@ function ModerationQueue() {
     <div className="space-y-4" aria-busy={loading || Boolean(listingId)}>
       {notice && <p role="status">{notice}</p>}
       {error && <div role="alert" className="flex flex-wrap items-center gap-3 text-destructive">{error}<Button variant="outline" onClick={() => refresh(page)}>Retry queue</Button></div>}
-      {loading ? <p role="status">Loading pending tuitions…</p> : !results ? null : results.items.length ? (
+      {loading ? <LoadingSkeleton label="Loading pending tuitions…" /> : !results ? null : results.items.length ? (
         <ul className="grid gap-4">
           {results.items.map((item) => (
             <li key={item.id} className="space-y-3 rounded-2xl border bg-card p-5 wrap-anywhere">

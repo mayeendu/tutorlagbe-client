@@ -6,6 +6,7 @@ import { notFound } from "next/navigation"
 
 import { DashboardAvatar } from "@/components/dashboard-shell"
 import { TeacherEditLink } from "@/components/teacher-card"
+import { ToastFeedback } from "@/components/toast-feedback"
 import { readTeacherDirectory, type Teacher } from "@/lib/teacher-api"
 
 export const metadata: Metadata = { title: "Teacher profile | Tutor Lagbe" }
@@ -20,6 +21,7 @@ export default async function TeacherProfilePage({ params }: PageProps<"/teacher
 
   return (
     <main className="mx-auto w-full max-w-5xl px-5 py-8 sm:px-8 sm:py-14">
+      {!teacher && <ToastFeedback message="This teacher profile is temporarily unavailable." />}
       <Link href="/teachers" className="inline-flex min-h-10 items-center gap-2 rounded-lg border bg-card px-3 text-sm font-semibold hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring">
         <ArrowLeft aria-hidden="true" className="size-4" />
         Back to teachers

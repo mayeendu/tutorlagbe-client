@@ -3,8 +3,10 @@
 import Link from "next/link"
 import { useState } from "react"
 
+import { LoadingSkeleton } from "@/components/loading-skeleton"
 import { ApplicationBadge } from "@/components/application-status"
 import { Button } from "@/components/ui/button"
+import { notifyError, notifySuccess } from "@/lib/notify"
 import { useManagedResource } from "@/hooks/use-managed-resource"
 import type { ApplicationPage, ReceivedApplication, StudentApplication } from "@/lib/application-types"
 import { ApiError, authorizedRequest } from "@/lib/managed-api"
@@ -56,12 +58,14 @@ export function ApplicationDashboard({ role, acceptedOnly }: { role: "student"; 
       const path = `/api/applications/${action.id}`
       if (action.decision === "cancel") await authorizedRequest(path, "DELETE")
       else await authorizedRequest(`${path}/status`, "PATCH", { status: action.decision })
-      setNotice(action.decision === "cancel" ? "Application cancelled." : `Application ${action.decision}.`)
+      const message = action.decision === "cancel" ? "Application cancelled." : `Application ${action.decision}.`
+      setNotice(message)
+      notifySuccess(message)
       setAction(undefined)
       if (action.decision === "cancel" && data?.items.length === 1 && page > 1) setPage(page - 1)
       reload()
     } catch (error) {
-      setFailure(error instanceof Error ? error.message : "Could not update this application.")
+      setFailure(notifyError(error, "Could not update this application."))
       if (error instanceof ApiError && (error.status === 404 || error.status === 409)) {
         setAction(undefined)
         reload()
@@ -86,7 +90,7 @@ export function ApplicationDashboard({ role, acceptedOnly }: { role: "student"; 
       {notice && <p role="status">{notice}</p>}
       {failure && <p role="alert" className="text-destructive">{failure}</p>}
       {error ? <p role="alert" className="rounded-xl border bg-card p-5">{error.message}</p> : !data ? (
-        <p role="status">{acceptedOnly ? "Loading courses…" : "Loading applications…"}</p>
+        <LoadingSkeleton label={acceptedOnly ? "Loading courses…" : "Loading applications…"} />
       ) : data.items.length ? (
         <ul className="grid gap-4">
           {data.items.map((item) => (

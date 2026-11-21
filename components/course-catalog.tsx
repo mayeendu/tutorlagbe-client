@@ -2,6 +2,7 @@ import { BarChart3, Timer } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { TuitionCard } from "@/components/tuition-card"
+import { ToastFeedback } from "@/components/toast-feedback"
 import type { Course } from "@/lib/course-seeds"
 import { readTuitions } from "@/lib/tuition-api"
 import type { TuitionPage } from "@/lib/tuition-types"
@@ -92,6 +93,7 @@ export async function HomeCourseSections() {
         >
           {title}
         </h2>
+        {!result && <ToastFeedback message="Tutor courses are temporarily unavailable." />}
         {courses.length ? (
           <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {courses.map((tuition) => <TuitionCard key={tuition.id} tuition={tuition} heading="h3" />)}

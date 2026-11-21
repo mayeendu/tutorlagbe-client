@@ -3,6 +3,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 
 import { ApplyForTuition } from "@/components/apply-for-tuition"
+import { ToastFeedback } from "@/components/toast-feedback"
 import { PublicTuitionActions } from "@/components/managed-tuitions"
 import { readTuitions } from "@/lib/tuition-api"
 import { tuitionFee, type Tuition } from "@/lib/tuition-types"
@@ -17,6 +18,7 @@ export default async function TuitionDetails({ params }: PageProps<"/tuitions/[i
   return (
     <main className="mx-auto max-w-4xl px-5 py-12 sm:px-8">
       <Link href="/tuitions" className="text-sm font-semibold text-indigo-700 hover:underline dark:text-indigo-300">Back to tuitions</Link>
+      {!tuition && <ToastFeedback message="Tuition details are temporarily unavailable." />}
       {tuition ? (
         <article className="mt-6 rounded-3xl border bg-card p-6 sm:p-10">
           {tuition.bannerImage && <Image src={tuition.bannerImage} alt="" width={960} height={480}

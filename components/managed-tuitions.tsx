@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
+import { LoadingSkeleton } from "@/components/loading-skeleton"
 import { DeleteRecord } from "@/components/delete-record"
 import { TuitionForm } from "@/components/tuition-dashboard"
 import { Button } from "@/components/ui/button"
@@ -17,7 +18,7 @@ export function PublicTuitionActions({ id }: { id: string }) {
   const role = data?.user.role
   const canCheck = role === "tutor" || role === "admin"
   const path = `/api/tuitions/manage/${id}`
-  const { data: managed } = useManagedResource<ManagedTuition>(canCheck ? path : null)
+  const { data: managed } = useManagedResource<ManagedTuition>(canCheck ? path : null, undefined, false)
   if (!canCheck || !managed) return null
   return (
     <div className="mt-6 flex flex-wrap gap-2 border-t pt-5">
@@ -36,7 +37,7 @@ export function ManagedTuitionDetail({ id, role, startEditing }: { id: string; r
   const item = saved ?? data
   const home = role === "tutor" ? "/dashboard/tutor/my-tuitions" : "/dashboard/admin/courses"
   if (error) return <div><Link href={home} className="underline">Back to courses</Link><p role="alert" className="mt-4">{error.message}</p><Button className="mt-4" variant="outline" onClick={reload}>Retry</Button></div>
-  if (!item) return <p role="status">Loading course…</p>
+  if (!item) return <LoadingSkeleton label="Loading course…" variant="detail" showHeading />
   return (
     <section className="mx-auto max-w-5xl space-y-5">
       <Link href={home} className="text-sm font-semibold underline">Back to courses</Link>
@@ -65,7 +66,7 @@ export function ManagedTuitionList({ role }: { role: "tutor" | "admin" }) {
   return (
     <section className="mx-auto max-w-5xl space-y-5">
       <h1 className="text-3xl font-bold tracking-tight">{role === "tutor" ? "My courses" : "All courses"}</h1>
-      {error ? <div role="alert">{error.message} <Button variant="outline" onClick={reload}>Retry</Button></div> : !data ? <p role="status">Loading courses…</p> : data.items.length ? (
+      {error ? <div role="alert">{error.message} <Button variant="outline" onClick={reload}>Retry</Button></div> : !data ? <LoadingSkeleton label="Loading courses…" /> : data.items.length ? (
         <ul className="space-y-3">
           {data.items.map((item) => (
             <li key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-4">

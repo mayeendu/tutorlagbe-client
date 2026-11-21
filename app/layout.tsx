@@ -1,5 +1,4 @@
 import { Geist, Geist_Mono } from "next/font/google"
-import Script from "next/script"
 import { Toaster } from "sonner"
 
 import "./globals.css"
@@ -27,19 +26,6 @@ export default function RootLayout({
       className={cn("antialiased", fontMono.variable, "font-sans", geist.variable)}
     >
       <body className="flex min-h-svh flex-col">
-        <Script id="theme-init" strategy="beforeInteractive">
-          {`(() => {
-            let preference;
-            try {
-              preference = localStorage.getItem("theme");
-            } catch {}
-            const theme = preference === "light" || preference === "dark"
-              ? preference
-              : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-            document.documentElement.classList.add(theme);
-            document.documentElement.style.colorScheme = theme;
-          })();`}
-        </Script>
         <ThemeProvider>
           <a
             href="#main-content"

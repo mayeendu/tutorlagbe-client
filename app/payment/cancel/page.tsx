@@ -7,6 +7,7 @@ export default function PaymentCancelPage() {
         <h1 className="text-3xl font-bold">Checkout cancelled</h1>
         <p>Return to pricing whenever you’re ready to continue.</p>
         <Link href="/pricing" className="inline-block font-semibold underline">Back to pricing</Link>
+        <Link href="/payment/history" className="block font-semibold underline">Payment history</Link>
       </section>
     </main>
   )

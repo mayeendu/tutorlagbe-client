@@ -2,6 +2,7 @@
 import Link from "next/link"
 
 import { TeacherCard } from "@/components/teacher-card"
+import { ToastFeedback } from "@/components/toast-feedback"
 import { readTeacherDirectory, type TeacherPage } from "@/lib/teacher-api"
 
 export const metadata: Metadata = { title: "Our teachers | Tutor Lagbe" }
@@ -16,6 +17,7 @@ export default async function TeachersPage({ searchParams }: PageProps<"/teacher
   return (
     <main className="mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-16">
       <h1 className="text-4xl font-bold tracking-tight">Our teachers</h1>
+      {!teachers && <ToastFeedback message="The teacher directory is temporarily unavailable." />}
       {!teachers ? (
         <p role="status" className="mt-6 rounded-xl border bg-card p-5">The teacher directory is temporarily unavailable. Refresh to try again.</p>
       ) : (

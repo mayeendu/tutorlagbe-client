@@ -3,6 +3,7 @@
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { notifyError, notifySuccess } from "@/lib/notify"
 import { authorizedRequest } from "@/lib/managed-api"
 
 export function DeleteRecord({ label, path, onDeleted }: { label: string; path: string; onDeleted: () => void }) {
@@ -16,9 +17,10 @@ export function DeleteRecord({ label, path, onDeleted }: { label: string; path: 
     setError("")
     try {
       await authorizedRequest(path, "DELETE")
+      notifySuccess(`Deleted ${label}.`)
       onDeleted()
     } catch (failure) {
-      setError(failure instanceof Error ? failure.message : "Could not delete this record.")
+      setError(notifyError(failure, "Could not delete this record."))
     } finally {
       setPending(false)
     }

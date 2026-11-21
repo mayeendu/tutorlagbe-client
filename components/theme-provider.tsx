@@ -90,6 +90,10 @@ function useTheme() {
 function ThemeProvider({ children }: { children: React.ReactNode }) {
   const resolvedTheme = React.useSyncExternalStore(subscribe, getResolvedTheme, () => undefined)
 
+  React.useLayoutEffect(() => {
+    applyTheme(getResolvedTheme())
+  }, [])
+
   return (
     <ThemeContext.Provider value={{ resolvedTheme, setTheme }}>
       <ThemeHotkey />

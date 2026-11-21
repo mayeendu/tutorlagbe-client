@@ -4,10 +4,12 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useId, useState, type FormEvent } from "react"
 
+import { LoadingSkeleton } from "@/components/loading-skeleton"
 import { DashboardAvatar } from "@/components/dashboard-shell"
 import { DeleteRecord } from "@/components/delete-record"
 import { ImageUpload, uploadSelectedImage } from "@/components/image-upload"
 import { Button } from "@/components/ui/button"
+import { notifyError, notifyInvalidForm, notifySuccess } from "@/lib/notify"
 import { useManagedResource } from "@/hooks/use-managed-resource"
 import { authClient, useSession } from "@/lib/auth-client"
 import { dashboardRoles, type DashboardRole } from "@/lib/dashboard-navigation"
@@ -49,10 +51,11 @@ export function ManagedProfile({ id, startEditing = false }: { id?: string; star
         name: values.get("name"), phone: values.get("phone"), bio: values.get("bio"), image: uploaded ?? (image || null),
       })
       setUpdated(await response.json())
+      notifySuccess("Profile saved.")
       setEditing(false)
       if (isOwn) void session.refetch()
     } catch (failure) {
-      setMessage(failure instanceof Error ? failure.message : "Could not save profile.")
+      setMessage(notifyError(failure, "Could not save profile."))
     } finally {
       setPending(false)
     }
@@ -70,7 +73,7 @@ export function ManagedProfile({ id, startEditing = false }: { id?: string; star
           </div>}
           <div role="alert">{error.message} <Button variant="outline" onClick={reload}>Retry</Button></div>
         </div>
-      ) : !item ? <p role="status" className="mt-4">Loading profile…</p> : (
+      ) : !item ? <div className="mt-4"><LoadingSkeleton label="Loading profile…" variant="detail" /></div> : (
         <>
           <div className="mt-6 flex flex-wrap items-center gap-4 border-b pb-6">
             <DashboardAvatar user={item} />
@@ -86,7 +89,7 @@ export function ManagedProfile({ id, startEditing = false }: { id?: string; star
             </div>
           </div>
           {editing ? (
-            <form id={editFormId} onSubmit={save} className="mt-6">
+            <form id={editFormId} onSubmit={save} onInvalid={notifyInvalidForm} className="mt-6">
               <fieldset disabled={pending} className="grid gap-4 sm:grid-cols-2">
                 <label className={label}>Name<input className={field} name="name" autoComplete="name" defaultValue={item.name} required minLength={2} maxLength={100} /></label>
                 <label className={label}>Phone<input className={field} name="phone" type="tel" autoComplete="tel" defaultValue={item.phone} maxLength={30} /></label>
@@ -133,7 +136,7 @@ export function ManagedUserList() {
   return (
     <section className="mx-auto max-w-5xl space-y-5">
       <h1 className="text-3xl font-bold tracking-tight">Users</h1>
-      {error ? <div role="alert">{error.message} <Button variant="outline" onClick={reload}>Retry</Button></div> : !data ? <p role="status">Loading users…</p> : data.items.length ? (
+      {error ? <div role="alert">{error.message} <Button variant="outline" onClick={reload}>Retry</Button></div> : !data ? <LoadingSkeleton label="Loading users…" /> : data.items.length ? (
         <ul className="space-y-3">
           {data.items.map((user) => (
             <li key={user.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-4">

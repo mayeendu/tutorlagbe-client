@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 import { useState, type FormEvent } from "react"
 
+import { notifyError, notifyInvalidForm, notifySuccess } from "@/lib/notify"
 import { ImageUpload, uploadSelectedImage } from "@/components/image-upload"
 import { Button } from "@/components/ui/button"
 import { useSession } from "@/lib/auth-client"
@@ -89,6 +90,7 @@ export function CatalogAdminActions(props: Props) {
         }
       }
       await authorizedRequest(path, method, payload)
+      notifySuccess(method === "DELETE" ? "Catalog entry deleted." : uploading ? "Image updated." : "Catalog changes saved.")
       if (method === "DELETE") {
         router.replace(isCourse ? "/courses" : "/learning-materials")
       } else {
@@ -97,7 +99,7 @@ export function CatalogAdminActions(props: Props) {
       }
       router.refresh()
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Could not update the catalog.")
+      setError(notifyError(cause, "Could not update the catalog."))
     } finally {
       setBusy(false)
     }
@@ -133,7 +135,7 @@ export function CatalogAdminActions(props: Props) {
         </div>
       )}
       {uploading && (
-        <form onSubmit={save} className="rounded-xl border bg-card p-4 sm:p-6">
+        <form onSubmit={save} onInvalid={notifyInvalidForm} className="rounded-xl border bg-card p-4 sm:p-6">
           <fieldset disabled={busy} className="grid gap-4">
             <ImageUpload
               name="image"
@@ -145,7 +147,7 @@ export function CatalogAdminActions(props: Props) {
         </form>
       )}
       {editing && (
-        <form onSubmit={save} className="rounded-xl border bg-card p-4 sm:p-6">
+        <form onSubmit={save} onInvalid={notifyInvalidForm} className="rounded-xl border bg-card p-4 sm:p-6">
           <fieldset disabled={busy} className="grid gap-4 sm:grid-cols-2">
             {fields.map(({ name, label: fieldLabel, value, max, multiline, options }) => (
               <label key={name} className={"grid gap-1.5 text-sm font-medium" + (multiline ? " sm:col-span-2" : "")}>

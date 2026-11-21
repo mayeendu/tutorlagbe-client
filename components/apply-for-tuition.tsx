@@ -5,6 +5,7 @@ import { useState, type FormEvent } from "react"
 
 import { ApplicationBadge } from "@/components/application-status"
 import { Button } from "@/components/ui/button"
+import { notifyError, notifyInvalidForm, notifySuccess } from "@/lib/notify"
 import { useManagedResource } from "@/hooks/use-managed-resource"
 import type { ApplicationPage, StudentApplication } from "@/lib/application-types"
 import { useSession } from "@/lib/auth-client"
@@ -31,8 +32,9 @@ function StudentApplyForm({ tuitionId }: { tuitionId: string }) {
         preferredSchedule: values.get("preferredSchedule"), studentNote: values.get("studentNote"),
       })
       setSubmitted(await response.json())
+      notifySuccess("Application submitted.")
     } catch (failure) {
-      setMessage(failure instanceof Error ? failure.message : "Could not submit your application.")
+      setMessage(notifyError(failure, "Could not submit your application."))
       if (failure instanceof ApiError && failure.status === 409) reload()
     } finally {
       setPending(false)
@@ -49,7 +51,7 @@ function StudentApplyForm({ tuitionId }: { tuitionId: string }) {
   if (!data) return <p role="status">Checking your applications…</p>
 
   return (
-    <form onSubmit={submit} className="space-y-4">
+    <form onSubmit={submit} onInvalid={notifyInvalidForm} className="space-y-4">
       <fieldset disabled={pending} className="grid min-w-0 gap-4 sm:grid-cols-2">
         <label className="grid gap-1.5 text-sm font-medium">Phone number<input className={input} name="studentPhone" type="tel" autoComplete="tel" required minLength={7} maxLength={30} /></label>
         <label className="grid gap-1.5 text-sm font-medium">Preferred schedule<input className={input} name="preferredSchedule" placeholder="e.g. Weekdays after 5 PM" required minLength={3} maxLength={160} /></label>
