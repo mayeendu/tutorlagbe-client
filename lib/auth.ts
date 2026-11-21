@@ -5,6 +5,11 @@ import { mongodbAdapter } from "@better-auth/mongo-adapter"
 import { APIError, createAuthMiddleware } from "better-auth/api"
 import { minimumPasswordLength, registrationRole } from "@/lib/auth-validation"
 
+const userCollection = process.env.TUTORLAGBE_USER_COLLECTION?.trim() || "user"
+if (userCollection !== "user" && userCollection !== "users") {
+  throw new Error("TUTORLAGBE_USER_COLLECTION must be user or users.")
+}
+
 const client = new MongoClient(process.env.BETTER_AUTH_DB_URI as string)
 const db = client.db("tutorlagbe_db")
 const googleClientId = process.env.GOOGLE_CLIENT_ID?.trim()
@@ -16,7 +21,7 @@ export const auth = betterAuth({
     minPasswordLength: minimumPasswordLength,
   },
   user: {
-    modelName: process.env.TUTORLAGBE_USER_COLLECTION === "users" ? "users" : "user",
+    modelName: userCollection,
     additionalFields: {
       role: {
         type: "string",

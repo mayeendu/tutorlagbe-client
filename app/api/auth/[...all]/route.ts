@@ -1,3 +1,6 @@
+import { safeEmailAuthResponse } from "@/lib/auth-email-response"
+import { apiUrl } from "@/lib/tuition-api"
+
 const requestHeaders = [
   "authorization",
   "content-type",
@@ -10,7 +13,7 @@ const requestHeaders = [
 
 function unavailable(message = "The TutorLagbe API is unavailable. Make sure Express is running and reachable.") {
   return Response.json(
-    { message },
+    { code: "AUTH_UNAVAILABLE", message },
     { status: 503, headers: { "Cache-Control": "no-store" } }
   )
 }
@@ -18,7 +21,21 @@ function unavailable(message = "The TutorLagbe API is unavailable. Make sure Exp
 async function handleAuth(request: Request) {
   const incoming = new URL(request.url)
   if (!incoming.pathname.startsWith("/api/auth/")) return unavailable()
-  const isToken = incoming.pathname.replace(/\/+$/, "") === "/api/auth/token"
+  const path = incoming.pathname.replace(/\/+$/, "")
+  const isToken = path === "/api/auth/token"
+  const emailAction = request.method === "POST"
+    ? path === "/api/auth/sign-in/email" ? "sign-in" : path === "/api/auth/sign-up/email" ? "sign-up" : undefined
+    : undefined
+  function emailUnavailable(reason: string) {
+    console.warn("[Auth] Email request failed.", {
+      action: emailAction,
+      status: 503,
+      code: "AUTH_UNAVAILABLE",
+      reason,
+    })
+    return unavailable("The authentication service is temporarily unavailable. Try again shortly.")
+  }
+
   const apiOrigin = process.env.TUTORLAGBE_API_URL?.trim()
   if (!apiOrigin) {
     if (isToken) {
@@ -26,14 +43,19 @@ async function handleAuth(request: Request) {
     }
     try {
       const { auth } = await import("@/lib/auth")
-      return await auth.handler(request)
+      const response = await auth.handler(request)
+      return emailAction ? await safeEmailAuthResponse(response, emailAction) : response
     } catch {
+      if (emailAction) return emailUnavailable("legacy_handler_failed")
       return unavailable("Authentication is temporarily unavailable.")
     }
   }
 
   const target = apiUrl(incoming.pathname)
-  if (!target) return unavailable("TUTORLAGBE_API_URL must be the Express server origin.")
+  if (!target) {
+    if (emailAction) return emailUnavailable("invalid_api_origin")
+    return unavailable("TUTORLAGBE_API_URL must be the Express server origin.")
+  }
   target.search = incoming.search
 
   const headers = new Headers()
@@ -66,16 +88,16 @@ async function handleAuth(request: Request) {
       responseHeaders.append("Set-Cookie", cookie)
     }
 
-    return new Response(upstream.body, {
+    const response = new Response(upstream.body, {
       status: upstream.status,
       headers: responseHeaders,
     })
+    return emailAction ? await safeEmailAuthResponse(response, emailAction) : response
   } catch {
+    if (emailAction) return emailUnavailable("upstream_request_failed")
     return unavailable()
   }
 }
 
 export { handleAuth as GET, handleAuth as POST }
-
-import { apiUrl } from "@/lib/tuition-api"
 
