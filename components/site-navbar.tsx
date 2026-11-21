@@ -2,22 +2,23 @@
 
 import { Menu as AccountMenu } from "@base-ui/react/menu"
 import { Popover } from "@base-ui/react/popover"
-import { ChevronDown, Menu } from "lucide-react"
+import { ChevronDown, CircleDollarSign, Menu } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
 
 import { SiteBrand } from "@/components/site-brand"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { authClient, useSession } from "@/lib/auth-client"
 
 const links = [
   { href: "/courses", label: "Our courses" },
   { href: "/teachers", label: "Our teachers" },
-  { href: "/learning-materials", label: "Learning Materials" },
+  { href: "/learning-materials", label: "Resources" },
 ]
 
 const menuLinkClass =
-  "block rounded-lg px-3 py-2.5 font-medium hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
+  "block rounded-md px-1 py-1 font-sm hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
 
 type AccountUser = NonNullable<ReturnType<typeof useSession>["data"]>["user"]
 
@@ -172,7 +173,7 @@ export function SiteNavbar() {
 
   return (
     <header className="border-b border-border bg-background">
-      <div className="mx-auto grid max-w-400 grid-cols-[1fr_auto] items-center gap-4 px-4 py-3 sm:px-7 lg:min-h-22 lg:grid-cols-[1fr_auto_1fr] xl:px-10">
+      <div className="mx-auto grid max-w-400 grid-cols-[1fr_auto] items-center gap-2 px-3 py-3 max-sm:[&>a>span:last-child]:text-lg sm:px-7 lg:min-h-22 lg:grid-cols-[1fr_auto_auto] lg:gap-4 xl:grid-cols-[1fr_auto_1fr] xl:px-10">
         <SiteBrand />
 
         <nav
@@ -218,71 +219,77 @@ export function SiteNavbar() {
           </Popover.Root>
         </nav>
 
-        <div className="hidden max-w-full min-w-0 items-center gap-2 justify-self-end lg:flex">
-          <AuthActions user={session?.user} isPending={isPending} />
-        </div>
-
-        <div className="lg:hidden">
-          <Popover.Root open={mobileOpen} onOpenChange={setMobileOpen}>
-            <Popover.Trigger
-              aria-label="Navigation menu"
-              render={<Button variant="outline" />}
-              className="size-11"
-            >
-              <Menu aria-hidden="true" className="size-5" />
-            </Popover.Trigger>
-            <Popover.Portal>
-              <Popover.Positioner
-                align="end"
-                sideOffset={12}
-                collisionPadding={16}
-                className="z-50 lg:hidden"
+        <div className="flex min-w-0 items-center justify-self-end gap-1 sm:gap-2">
+          <Link href="/pricing" className="inline-flex h-10 shrink-0 items-center rounded-lg px-2 text-sm font-semibold hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring">
+            <CircleDollarSign aria-hidden="true" className="size-5 sm:hidden" />
+            <span className="sr-only sm:not-sr-only">Pricing</span>
+          </Link>
+          <ThemeToggle />
+          <div className="hidden min-w-0 items-center gap-2 lg:flex">
+            <AuthActions user={session?.user} isPending={isPending} />
+          </div>
+          <div className="lg:hidden">
+            <Popover.Root open={mobileOpen} onOpenChange={setMobileOpen}>
+              <Popover.Trigger
+                aria-label="Navigation menu"
+                render={<Button variant="outline" />}
+                className="size-11"
               >
-                <Popover.Popup
-                  aria-label="Navigation menu"
-                  className="w-[min(22rem,calc(100vw-2rem))] rounded-xl border bg-popover p-2 text-popover-foreground shadow-lg"
+                <Menu aria-hidden="true" className="size-5" />
+              </Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Positioner
+                  align="end"
+                  sideOffset={12}
+                  collisionPadding={16}
+                  className="z-50 lg:hidden"
                 >
-                  <nav aria-label="Main navigation">
-                    {links.map(({ href, label }) => (
-                      <Popover.Close
-                        key={href}
-                        nativeButton={false}
-                        render={<Link href={href} />}
-                        className={menuLinkClass}
-                      >
-                        {label}
-                      </Popover.Close>
-                    ))}
-                    <details className="group">
-                      <summary
-                        className={`${menuLinkClass} flex cursor-pointer list-none items-center justify-between [&::-webkit-details-marker]:hidden`}
-                      >
-                        Pages
-                        <ChevronDown
-                          aria-hidden="true"
-                          className="size-4 transition-transform group-open:rotate-180"
-                        />
-                      </summary>
-                      <Popover.Close
-                        nativeButton={false}
-                        render={<Link href="/" />}
-                        className={`ml-3 ${menuLinkClass}`}
-                      >
-                        Home
-                      </Popover.Close>
-                    </details>
-                  </nav>
-                  <div className="mt-2 grid grid-cols-2 gap-2 border-t p-2 pt-3">
-                    <AuthActions
-                      user={session?.user}
-                      isPending={isPending}
-                      onNavigate={() => setMobileOpen(false)}
-                    />
-                  </div>
-                </Popover.Popup>
-              </Popover.Positioner>
-            </Popover.Portal>
-          </Popover.Root>
+                  <Popover.Popup
+                    aria-label="Navigation menu"
+                    className="w-[min(22rem,calc(100vw-2rem))] rounded-xl border bg-popover p-2 text-popover-foreground shadow-lg"
+                  >
+                    <nav aria-label="Main navigation">
+                      {links.map(({ href, label }) => (
+                        <Popover.Close
+                          key={href}
+                          nativeButton={false}
+                          render={<Link href={href} />}
+                          className={menuLinkClass}
+                        >
+                          {label}
+                        </Popover.Close>
+                      ))}
+                      <details className="group">
+                        <summary
+                          className={`${menuLinkClass} flex cursor-pointer list-none items-center justify-between [&::-webkit-details-marker]:hidden`}
+                        >
+                          Pages
+                          <ChevronDown
+                            aria-hidden="true"
+                            className="size-4 transition-transform group-open:rotate-180"
+                          />
+                        </summary>
+                        <Popover.Close
+                          nativeButton={false}
+                          render={<Link href="/" />}
+                          className={`ml-3 ${menuLinkClass}`}
+                        >
+                          Home
+                        </Popover.Close>
+                      </details>
+                    </nav>
+                    <div className="mt-2 grid grid-cols-2 gap-2 border-t p-2 pt-3">
+                      <AuthActions
+                        user={session?.user}
+                        isPending={isPending}
+                        onNavigate={() => setMobileOpen(false)}
+                      />
+                    </div>
+                  </Popover.Popup>
+                </Popover.Positioner>
+              </Popover.Portal>
+            </Popover.Root>
+          </div>
         </div>
       </div>
     </header>

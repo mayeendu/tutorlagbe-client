@@ -2,10 +2,11 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useState, type FormEvent } from "react"
+import { useId, useState, type FormEvent } from "react"
 
 import { DashboardAvatar } from "@/components/dashboard-shell"
 import { DeleteRecord } from "@/components/delete-record"
+import { ImageUpload, uploadSelectedImage } from "@/components/image-upload"
 import { Button } from "@/components/ui/button"
 import { useManagedResource } from "@/hooks/use-managed-resource"
 import { authClient, useSession } from "@/lib/auth-client"
@@ -20,15 +21,16 @@ type Profile = {
 const field = "rounded-lg border bg-background px-3 py-2.5 text-base"
 const label = "grid gap-1.5 text-sm font-medium"
 
-export function ManagedProfile({ id }: { id?: string }) {
+export function ManagedProfile({ id, startEditing = false }: { id?: string; startEditing?: boolean }) {
   const session = useSession()
   const router = useRouter()
+  const editFormId = useId()
   const user = session.data?.user
   const profileId = id ?? user?.id
   const path = profileId ? `/api/profiles/${encodeURIComponent(profileId)}` : null
   const { data, error, reload } = useManagedResource<Profile>(path)
   const [updated, setUpdated] = useState<Profile>()
-  const [editing, setEditing] = useState(false)
+  const [editing, setEditing] = useState(startEditing)
   const [pending, setPending] = useState(false)
   const [message, setMessage] = useState("")
   const item = updated?.id === profileId ? updated : data
@@ -42,8 +44,9 @@ export function ManagedProfile({ id }: { id?: string }) {
     setPending(true)
     setMessage("")
     try {
+      const uploaded = await uploadSelectedImage(values.get("photoFile"))
       const response = await authorizedRequest(path, "PATCH", {
-        name: values.get("name"), phone: values.get("phone"), bio: values.get("bio"), image: image || null,
+        name: values.get("name"), phone: values.get("phone"), bio: values.get("bio"), image: uploaded ?? (image || null),
       })
       setUpdated(await response.json())
       setEditing(false)
@@ -63,7 +66,7 @@ export function ManagedProfile({ id }: { id?: string }) {
         <div className="mt-4 space-y-4">
           {isOwn && user && <div className="flex flex-wrap items-center gap-4">
             <DashboardAvatar user={user} />
-            <div><p className="font-semibold">{user.name}</p><p className="text-sm text-muted-foreground [overflow-wrap:anywhere]">{user.email}</p></div>
+            <div><p className="font-semibold">{user.name}</p><p className="text-sm text-muted-foreground wrap-anywhere">{user.email}</p></div>
           </div>}
           <div role="alert">{error.message} <Button variant="outline" onClick={reload}>Retry</Button></div>
         </div>
@@ -71,14 +74,19 @@ export function ManagedProfile({ id }: { id?: string }) {
         <>
           <div className="mt-6 flex flex-wrap items-center gap-4 border-b pb-6">
             <DashboardAvatar user={item} />
-            <div className="min-w-0 [overflow-wrap:anywhere]">
+            {editing && (
+              <div className="min-w-0 max-w-full sm:ms-2">
+                <ImageUpload name="photoFile" label="Upload profile photo" form={editFormId} disabled={pending} />
+              </div>
+            )}
+            <div className="min-w-0 wrap-anywhere">
               <p className="font-semibold">{item.name}</p>
               <p className="text-sm text-muted-foreground">{item.email}</p>
               <p className="text-sm text-muted-foreground">{dashboardRoles[item.role]}{item.plan && ` · ${item.plan}`}</p>
             </div>
           </div>
           {editing ? (
-            <form onSubmit={save} className="mt-6">
+            <form id={editFormId} onSubmit={save} className="mt-6">
               <fieldset disabled={pending} className="grid gap-4 sm:grid-cols-2">
                 <label className={label}>Name<input className={field} name="name" autoComplete="name" defaultValue={item.name} required minLength={2} maxLength={100} /></label>
                 <label className={label}>Phone<input className={field} name="phone" type="tel" autoComplete="tel" defaultValue={item.phone} maxLength={30} /></label>
@@ -96,7 +104,7 @@ export function ManagedProfile({ id }: { id?: string }) {
               {updated && <p role="status" className="mt-4 text-sm">Profile saved.</p>}
               <dl className="my-5 grid gap-5 sm:grid-cols-2">
                 <div><dt className="text-sm text-muted-foreground">Phone</dt><dd>{item.phone || "No phone added"}</dd></div>
-                <div><dt className="text-sm text-muted-foreground">Bio</dt><dd className="whitespace-pre-wrap [overflow-wrap:anywhere]">{item.bio || "No bio added"}</dd></div>
+                <div><dt className="text-sm text-muted-foreground">Bio</dt><dd className="whitespace-pre-wrap wrap-anywhere">{item.bio || "No bio added"}</dd></div>
               </dl>
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" onClick={() => setEditing(true)}>Edit profile</Button>
@@ -129,7 +137,7 @@ export function ManagedUserList() {
         <ul className="space-y-3">
           {data.items.map((user) => (
             <li key={user.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-4">
-              <div className="min-w-0 [overflow-wrap:anywhere]">
+              <div className="min-w-0 wrap-anywhere">
                 <h2 className="font-semibold">{user.name}</h2>
                 <p className="text-sm text-muted-foreground">{user.email} · {dashboardRoles[user.role]}</p>
               </div>

@@ -8,40 +8,32 @@ const requestHeaders = [
   "sec-fetch-site",
 ]
 
-function unavailable() {
+function unavailable(message = "The TutorLagbe API is unavailable. Make sure Express is running and reachable.") {
   return Response.json(
-    { message: "Authentication is temporarily unavailable" },
+    { message },
     { status: 503, headers: { "Cache-Control": "no-store" } }
   )
 }
 
 async function handleAuth(request: Request) {
+  const incoming = new URL(request.url)
+  if (!incoming.pathname.startsWith("/api/auth/")) return unavailable()
+  const isToken = incoming.pathname.replace(/\/+$/, "") === "/api/auth/token"
   const apiOrigin = process.env.TUTORLAGBE_API_URL?.trim()
   if (!apiOrigin) {
+    if (isToken) {
+      return unavailable("Dashboard access needs the Express API. Start it with Next.js or configure TUTORLAGBE_API_URL.")
+    }
     try {
       const { auth } = await import("@/lib/auth")
       return await auth.handler(request)
     } catch {
-      return unavailable()
+      return unavailable("Authentication is temporarily unavailable.")
     }
   }
 
-  const target = URL.parse(apiOrigin)
-  if (
-    !target ||
-    !["http:", "https:"].includes(target.protocol) ||
-    target.pathname !== "/" ||
-    target.username ||
-    target.password ||
-    target.search ||
-    target.hash
-  ) {
-    return unavailable()
-  }
-
-  const incoming = new URL(request.url)
-  if (!incoming.pathname.startsWith("/api/auth/")) return unavailable()
-  target.pathname = incoming.pathname
+  const target = apiUrl(incoming.pathname)
+  if (!target) return unavailable("TUTORLAGBE_API_URL must be the Express server origin.")
   target.search = incoming.search
 
   const headers = new Headers()
@@ -61,6 +53,10 @@ async function handleAuth(request: Request) {
       signal: AbortSignal.any([request.signal, AbortSignal.timeout(10_000)]),
     }
     const upstream = await fetch(target, options)
+    if (upstream.status === 503 && isToken) {
+      await upstream.body?.cancel()
+      return unavailable("Express authentication is unavailable. Check its auth settings and MongoDB connection.")
+    }
     const responseHeaders = new Headers({ "Cache-Control": "no-store" })
     for (const name of ["content-type", "location", "retry-after", "www-authenticate"]) {
       const value = upstream.headers.get(name)
@@ -80,4 +76,6 @@ async function handleAuth(request: Request) {
 }
 
 export { handleAuth as GET, handleAuth as POST }
+
+import { apiUrl } from "@/lib/tuition-api"
 

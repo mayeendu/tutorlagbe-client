@@ -40,7 +40,7 @@ export function ManagedTuitionDetail({ id, role, startEditing }: { id: string; r
   return (
     <section className="mx-auto max-w-5xl space-y-5">
       <Link href={home} className="text-sm font-semibold underline">Back to courses</Link>
-      <h1 className="text-3xl font-bold [overflow-wrap:anywhere]">{item.title}</h1>
+      <h1 className="text-3xl font-bold wrap-anywhere">{item.title}</h1>
       {saved && <p role="status">{role === "tutor" ? "Changes saved and submitted for admin review." : "Changes saved."}</p>}
       {editing ? (
         <TuitionForm item={item} onCancel={() => setEditing(false)} onSaved={(updated) => { setSaved(updated); setEditing(false) }} />
@@ -48,7 +48,7 @@ export function ManagedTuitionDetail({ id, role, startEditing }: { id: string; r
         <div className="space-y-4 rounded-2xl border bg-card p-5">
           <p className="text-sm text-muted-foreground">{item.subject} · {item.classLevel} · {item.mode} · {tuitionFee.format(item.monthlyFee)} per month</p>
           <p className="text-sm font-semibold capitalize">{item.approvalStatus}{!item.isActive && " · Closed"}</p>
-          <p className="whitespace-pre-wrap [overflow-wrap:anywhere]">{item.description}</p>
+          <p className="whitespace-pre-wrap wrap-anywhere">{item.description}</p>
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={() => setEditing(true)}>Edit course</Button>
             <DeleteRecord label="course" path={path} onDeleted={() => { router.replace(home); router.refresh() }} />
@@ -69,7 +69,7 @@ export function ManagedTuitionList({ role }: { role: "tutor" | "admin" }) {
         <ul className="space-y-3">
           {data.items.map((item) => (
             <li key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-4">
-              <div className="min-w-0 [overflow-wrap:anywhere]">
+              <div className="min-w-0 wrap-anywhere">
                 <h2 className="font-semibold">{item.title}</h2>
                 <p className="text-sm text-muted-foreground capitalize">{item.approvalStatus} · {item.tutorName}</p>
               </div>

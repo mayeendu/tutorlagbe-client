@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react"
 
+import { ImageUpload, uploadSelectedImage } from "@/components/image-upload"
 import { Button } from "@/components/ui/button"
 import { authorizedRequest } from "@/lib/managed-api"
 import { tuitionFee, type ManagedTuition, type ManagedTuitionPage } from "@/lib/tuition-types"
@@ -15,6 +16,7 @@ export function TuitionForm({ item, onSaved, onCancel }: {
   onCancel?: () => void
 }) {
   const [pending, setPending] = useState(false)
+  const [imageReset, setImageReset] = useState(0)
   const [message, setMessage] = useState<{ error: boolean; text: string }>()
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -25,14 +27,17 @@ export function TuitionForm({ item, onSaved, onCancel }: {
     setPending(true)
     setMessage(undefined)
     try {
+      const bannerImage = await uploadSelectedImage(data.get("bannerFile"))
       const response = await authorizedRequest(item ? `/api/tuitions/manage/${item.id}` : "/api/tuitions", item ? "PATCH" : "POST", {
         title: data.get("title"), subject: data.get("subject"), classLevel: data.get("classLevel"),
         mode: data.get("mode"), location: data.get("location"), monthlyFee: Number(data.get("monthlyFee")),
         daysPerWeek: Number(data.get("daysPerWeek")), description: data.get("description"),
+        bannerImage,
       })
       if (item && onSaved) onSaved(await response.json())
       else {
         form.reset()
+        setImageReset((value) => value + 1)
         setMessage({ error: false, text: "Tuition submitted for admin review." })
       }
     } catch (error) {
@@ -53,6 +58,7 @@ export function TuitionForm({ item, onSaved, onCancel }: {
         <label className={labelClass}>Monthly fee (BDT)<input name="monthlyFee" type="number" defaultValue={item?.monthlyFee} className={inputClass} required min={0} max={1000000} /></label>
         <label className={labelClass}>Days per week<input name="daysPerWeek" type="number" defaultValue={item?.daysPerWeek} className={inputClass} required min={1} max={7} /></label>
         <label className={`${labelClass} sm:col-span-2`}>Description<textarea name="description" defaultValue={item?.description} className={inputClass} required minLength={20} maxLength={2000} rows={5} /></label>
+        <div className="sm:col-span-2"><ImageUpload key={imageReset} name="bannerFile" label="Upload tuition banner" currentImage={item?.bannerImage} /></div>
         <div className="flex flex-wrap gap-2 sm:col-span-2">
           <Button type="submit" className="h-11 bg-indigo-700 text-white hover:bg-indigo-800">{pending ? "Saving…" : item ? "Save changes" : "Submit for review"}</Button>
           {onCancel && <Button type="button" variant="outline" className="h-11" onClick={onCancel}>Cancel</Button>}
@@ -118,7 +124,7 @@ function ModerationQueue() {
       {loading ? <p role="status">Loading pending tuitions…</p> : !results ? null : results.items.length ? (
         <ul className="grid gap-4">
           {results.items.map((item) => (
-            <li key={item.id} className="space-y-3 rounded-2xl border bg-card p-5 [overflow-wrap:anywhere]">
+            <li key={item.id} className="space-y-3 rounded-2xl border bg-card p-5 wrap-anywhere">
               <h2 className="text-xl font-semibold">{item.title}</h2>
               <p className="text-sm text-muted-foreground">{item.subject} · {item.classLevel} · {item.mode} · {tuitionFee.format(item.monthlyFee)} per month</p>
               <p className="text-sm">{item.tutorName}{item.location && ` · ${item.location}`} · {item.daysPerWeek} days per week</p>

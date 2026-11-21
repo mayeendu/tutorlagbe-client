@@ -1,13 +1,13 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 
-import {
-  allCourses,
-  courseClass,
-  CourseGrid,
-  courseMode,
-} from "@/components/course-catalog"
+import { CourseGrid } from "@/components/course-catalog"
+import { TuitionCard } from "@/components/tuition-card"
+import { readCourses } from "@/lib/catalog"
+import { courseClass, courseMode } from "@/lib/course-seeds"
 import { Button } from "@/components/ui/button"
+import { readTuitions } from "@/lib/tuition-api"
+import type { TuitionPage } from "@/lib/tuition-types"
 
 export const metadata: Metadata = { title: "All courses | Tutor Lagbe" }
 
@@ -19,11 +19,28 @@ export default async function CoursesPage({
   const query = await searchParams
   const mode = courseMode.safeParse(query.mode).data
   const classLevel = courseClass.safeParse(query.class).data
-  const courses = allCourses.filter(
+  const pageValue = typeof query.page === "string" ? Number(query.page) : 1
+  const page = Number.isInteger(pageValue) && pageValue >= 1 && pageValue <= 1000 ? pageValue : 1
+  const filters = new URLSearchParams()
+  if (mode) filters.set("mode", mode === "Physical" ? "Offline" : mode)
+  if (classLevel) filters.set("classLevel", classLevel)
+  filters.set("page", String(page))
+
+  const [catalog, response] = await Promise.all([readCourses(), readTuitions(`?${filters}`)])
+  const tutorCourses: TuitionPage | null = response?.ok ? await response.json().catch(() => null) : null
+  const courses = catalog.filter(
     (course) =>
       (!mode || course.mode === mode) &&
       (!classLevel || course.classLevel === classLevel)
   )
+
+  function pageHref(number: number) {
+    const params = new URLSearchParams()
+    if (mode) params.set("mode", mode)
+    if (classLevel) params.set("class", classLevel)
+    if (number > 1) params.set("page", String(number))
+    return params.size ? `/courses?${params}` : "/courses"
+  }
 
   return (
     <main className="mx-auto max-w-360 px-5 py-12 sm:px-8 sm:py-16 lg:px-12 xl:px-16">
@@ -79,6 +96,29 @@ export default async function CoursesPage({
           </Button>
         )}
       </form>
+      <section aria-labelledby="tutor-courses" className="mb-10">
+        <h2 id="tutor-courses" className="mb-4 text-2xl font-bold">Tutor courses</h2>
+        {!tutorCourses ? (
+          <p className="rounded-2xl border bg-card p-6 text-muted-foreground">
+            Tutor courses are temporarily unavailable.
+          </p>
+        ) : tutorCourses.items.length ? (
+          <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {tutorCourses.items.map((tuition) => <TuitionCard key={tuition.id} tuition={tuition} />)}
+          </ul>
+        ) : (
+          <p className="rounded-2xl border border-dashed p-6 text-muted-foreground">
+            No tutor courses match these filters.
+          </p>
+        )}
+        {tutorCourses && (page > 1 || tutorCourses.hasMore) && (
+          <nav aria-label="Tutor course pages" className="mt-6 flex flex-wrap gap-4 text-sm font-medium">
+            {page > 1 && <Link href={pageHref(page - 1)} className="underline">Previous page</Link>}
+            {tutorCourses.hasMore && <Link href={pageHref(page + 1)} className="underline">Next page</Link>}
+          </nav>
+        )}
+      </section>
+      <h2 className="mb-4 text-2xl font-bold">Course catalog</h2>
       <p className="mb-4 text-sm text-muted-foreground">
         {courses.length} {courses.length === 1 ? "course" : "courses"}
       </p>

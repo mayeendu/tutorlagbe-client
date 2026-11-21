@@ -134,6 +134,14 @@
 
 /* Page-specific styles for the shared marketing and auth layouts. */
 @layer utilities {
+  header:has(nav[aria-label="Main navigation"]),
+  [aria-label="Navigation menu"].bg-popover,
+  [aria-label="Pages"].bg-popover,
+  [role="menu"].bg-popover {
+    background-color: color-mix(in oklch, var(--hero-start) 65%, var(--popover));
+    color: var(--popover-foreground);
+  }
+
   #main-content > main {
     width: 100%;
   }

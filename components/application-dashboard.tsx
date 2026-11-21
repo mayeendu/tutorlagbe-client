@@ -36,7 +36,7 @@ function ApplicationDetails({ item }: { item: Item }) {
   )
 }
 
-export function ApplicationDashboard({ role }: { role: "student" | "tutor" }) {
+export function ApplicationDashboard({ role, acceptedOnly }: { role: "student"; acceptedOnly?: boolean } | { role: "tutor"; acceptedOnly?: never }) {
   const tutor = role === "tutor"
   const [page, setPage] = useState(1)
   const [action, setAction] = useState<Action>()
@@ -44,7 +44,7 @@ export function ApplicationDashboard({ role }: { role: "student" | "tutor" }) {
   const [notice, setNotice] = useState("")
   const [failure, setFailure] = useState("")
   const { data, error, reload } = useManagedResource<ApplicationPage<Item>>(
-    `/api/applications/${tutor ? "received" : "mine"}?page=${page}`, 15_000,
+    `/api/applications/${tutor ? "received" : "mine"}?page=${page}${acceptedOnly ? "&status=accepted" : ""}`, 15_000,
   )
 
   async function confirm() {
@@ -80,17 +80,17 @@ export function ApplicationDashboard({ role }: { role: "student" | "tutor" }) {
   return (
     <section className="mx-auto max-w-5xl space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-3xl font-bold tracking-tight">{tutor ? "Course applications" : "My applications"}</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{acceptedOnly ? "My courses" : tutor ? "Course applications" : "My applications"}</h1>
         <Button variant="outline" disabled={busy} onClick={() => { setAction(undefined); setFailure(""); reload() }}>Refresh</Button>
       </div>
       {notice && <p role="status">{notice}</p>}
       {failure && <p role="alert" className="text-destructive">{failure}</p>}
       {error ? <p role="alert" className="rounded-xl border bg-card p-5">{error.message}</p> : !data ? (
-        <p role="status">Loading applications…</p>
+        <p role="status">{acceptedOnly ? "Loading courses…" : "Loading applications…"}</p>
       ) : data.items.length ? (
         <ul className="grid gap-4">
           {data.items.map((item) => (
-            <li key={item.id} className="space-y-4 rounded-2xl border bg-card p-5 [overflow-wrap:anywhere] sm:p-6">
+            <li key={item.id} className="space-y-4 rounded-2xl border bg-card p-5 wrap-anywhere sm:p-6">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h2 className="text-lg font-semibold">{item.tuitionTitle}</h2>
@@ -99,6 +99,11 @@ export function ApplicationDashboard({ role }: { role: "student" | "tutor" }) {
                 <ApplicationBadge status={item.status} />
               </div>
               <ApplicationDetails item={item} />
+              {acceptedOnly && (
+                <Link href={`/tuitions/${item.tuitionId}`} className="text-sm font-semibold underline">
+                  View course details<span className="sr-only"> for {item.tuitionTitle}</span>
+                </Link>
+              )}
               {item.status === "pending" && (
                 <div className="flex flex-wrap gap-2 border-t pt-4">
                   {tutor ? (
@@ -123,12 +128,12 @@ export function ApplicationDashboard({ role }: { role: "student" | "tutor" }) {
         </ul>
       ) : (
         <div className="space-y-3 rounded-xl border border-dashed p-5 text-muted-foreground">
-          <p>No applications on this page.</p>
+          <p>{acceptedOnly ? (page === 1 ? "You have no tutor-approved courses yet." : "No courses on this page.") : "No applications on this page."}</p>
           {!tutor && <Link href="/tuitions" className="font-semibold underline">Browse tuitions</Link>}
         </div>
       )}
       {data && (page > 1 || data.hasMore) && (
-        <nav aria-label="Application pages" className="flex flex-wrap gap-2">
+        <nav aria-label={acceptedOnly ? "Course pages" : "Application pages"} className="flex flex-wrap gap-2">
           {page > 1 && <Button variant="outline" disabled={busy} onClick={() => changePage(page - 1)}>Previous page</Button>}
           {data.hasMore && <Button variant="outline" disabled={busy} onClick={() => changePage(page + 1)}>Next page</Button>}
         </nav>

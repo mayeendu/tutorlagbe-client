@@ -79,8 +79,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         <aside id="dashboard-sidebar" className={`${mobileOpen ? "block" : "hidden"} ${sidebarOpen ? "lg:block" : "lg:hidden"} border-b bg-background p-4 lg:min-h-[65vh] lg:w-64 lg:border-r lg:border-b-0 lg:p-5`}>
           <div className="mb-5 flex flex-col items-center gap-2 rounded-xl border bg-muted/40 p-4 text-center">
             <DashboardAvatar user={user} />
-            <p className="font-semibold [overflow-wrap:anywhere]">{user.name}</p>
+            <p className="font-semibold wrap-anywhere">{user.name}</p>
             <p className="text-sm text-muted-foreground">{dashboardRoles[role]}</p>
+            {role !== "admin" && <Link href="/pricing" className="text-sm font-semibold text-indigo-700 hover:underline dark:text-indigo-300">{user.plan === "pro" ? "Pro · Manage billing" : "Free · View Pro plans"}</Link>}
             <Link href="/dashboard/profile" aria-current={pathname === "/dashboard/profile" ? "page" : undefined} onClick={() => setMobileOpen(false)} className="mt-1 inline-flex min-h-10 items-center gap-2 rounded-lg border bg-background px-3 text-sm font-semibold hover:bg-muted aria-[current=page]:border-indigo-500">
               <UserRound aria-hidden="true" className="size-4" /> Profile
             </Link>

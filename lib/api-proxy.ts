@@ -1,6 +1,6 @@
 import { apiUrl } from "@/lib/tuition-api"
 
-export async function proxyApi(request: Request, path: string) {
+export async function proxyApi(request: Request, path: string, timeout = 7000) {
   const target = apiUrl(path)
   if (target) {
     target.search = new URL(request.url).search
@@ -17,7 +17,7 @@ export async function proxyApi(request: Request, path: string) {
         duplex: request.body ? "half" : undefined,
         cache: "no-store",
         redirect: "error",
-        signal: AbortSignal.any([request.signal, AbortSignal.timeout(7000)]),
+        signal: AbortSignal.any([request.signal, AbortSignal.timeout(timeout)]),
       }
       const response = await fetch(target, options)
       const responseHeaders = new Headers({ "Cache-Control": "no-store" })

@@ -8,6 +8,7 @@ export type Tuition = {
   monthlyFee: number
   daysPerWeek: number
   description: string
+  bannerImage?: string
   tutorName: string
   createdAt: string
 }

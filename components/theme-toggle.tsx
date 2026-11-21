@@ -1,7 +1,7 @@
 "use client"
 
 import { Moon, Sun } from "lucide-react"
-import { useTheme } from "next-themes"
+import { useTheme } from "@/components/theme-provider"
 import { useSyncExternalStore } from "react"
 
 // Hydration is a one-time transition, so there are no store events to track.

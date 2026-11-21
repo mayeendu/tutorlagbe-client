@@ -1,10 +1,10 @@
 import { Geist, Geist_Mono } from "next/font/google"
+import Script from "next/script"
 
 import "./globals.css"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteNavbar } from "@/components/site-navbar"
 import { ThemeProvider } from "@/components/theme-provider"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { cn } from "@/lib/utils";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'})
@@ -26,6 +26,19 @@ export default function RootLayout({
       className={cn("antialiased", fontMono.variable, "font-sans", geist.variable)}
     >
       <body className="flex min-h-svh flex-col">
+        <Script id="theme-init" strategy="beforeInteractive">
+          {`(() => {
+            let preference;
+            try {
+              preference = localStorage.getItem("theme");
+            } catch {}
+            const theme = preference === "light" || preference === "dark"
+              ? preference
+              : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+            document.documentElement.classList.add(theme);
+            document.documentElement.style.colorScheme = theme;
+          })();`}
+        </Script>
         <ThemeProvider>
           <a
             href="#main-content"
@@ -33,12 +46,7 @@ export default function RootLayout({
           >
             Skip to content
           </a>
-          <div className="border-b border-border bg-background">
-            <div className="mx-auto grid max-w-400 grid-cols-[minmax(0,1fr)_auto] items-center pr-3 sm:pr-7 xl:pr-10 [&>header]:border-b-0 [&>header>div]:gap-2 [&>header>div]:pr-1 max-sm:[&>header>div]:pl-3 sm:[&>header>div]:pr-2">
-              <SiteNavbar />
-              <ThemeToggle />
-            </div>
-          </div>
+          <SiteNavbar />
           <div id="main-content" tabIndex={-1} className="min-w-0 flex-1">
             {children}
           </div>

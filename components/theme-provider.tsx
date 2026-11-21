@@ -1,23 +1,100 @@
 "use client"
 
 import * as React from "react"
-import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes"
 
-function ThemeProvider({
-  children,
-  ...props
-}: React.ComponentProps<typeof NextThemesProvider>) {
+type Theme = "light" | "dark"
+
+const storageKey = "theme"
+const mediaQuery = "(prefers-color-scheme: dark)"
+const themeChange = "tutorlagbe:theme-change"
+let currentPreference: Theme | undefined
+
+function getResolvedTheme(): Theme {
+  let preference: string | null | undefined = currentPreference
+  if (!preference) {
+    try {
+      preference = localStorage.getItem(storageKey)
+    } catch {
+      // The system preference still works when storage is unavailable.
+    }
+  }
+
+  if (preference === "light" || preference === "dark") {
+    return preference
+  }
+
+  return window.matchMedia(mediaQuery).matches ? "dark" : "light"
+}
+
+function applyTheme(theme: Theme) {
+  const root = document.documentElement
+  if (root.classList.contains(theme) && root.style.colorScheme === theme) {
+    return
+  }
+
+  const style = document.createElement("style")
+  style.textContent = "*, *::before, *::after { transition: none !important; }"
+  document.head.appendChild(style)
+  root.classList.remove("light", "dark")
+  root.classList.add(theme)
+  root.style.colorScheme = theme
+  window.getComputedStyle(document.body).getPropertyValue("color")
+  window.setTimeout(() => style.remove(), 0)
+}
+
+function subscribe(onChange: () => void) {
+  const media = window.matchMedia(mediaQuery)
+  function update() {
+    applyTheme(getResolvedTheme())
+    onChange()
+  }
+
+  function onStorage(event: StorageEvent) {
+    if (event.storageArea === localStorage && (event.key === storageKey || event.key === null)) {
+      currentPreference = undefined
+      update()
+    }
+  }
+
+  media.addEventListener("change", update)
+  window.addEventListener("storage", onStorage)
+  window.addEventListener(themeChange, update)
+  update()
+
+  return () => {
+    media.removeEventListener("change", update)
+    window.removeEventListener("storage", onStorage)
+    window.removeEventListener(themeChange, update)
+  }
+}
+
+function setTheme(theme: Theme) {
+  currentPreference = theme
+  try {
+    localStorage.setItem(storageKey, theme)
+  } catch {
+    // Keep the selected theme for the current page.
+  }
+  window.dispatchEvent(new Event(themeChange))
+}
+
+const ThemeContext = React.createContext<{
+  resolvedTheme: Theme | undefined
+  setTheme: typeof setTheme
+}>({ resolvedTheme: undefined, setTheme })
+
+function useTheme() {
+  return React.useContext(ThemeContext)
+}
+
+function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const resolvedTheme = React.useSyncExternalStore(subscribe, getResolvedTheme, () => undefined)
+
   return (
-    <NextThemesProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      disableTransitionOnChange
-      {...props}
-    >
+    <ThemeContext.Provider value={{ resolvedTheme, setTheme }}>
       <ThemeHotkey />
       {children}
-    </NextThemesProvider>
+    </ThemeContext.Provider>
   )
 }
 
@@ -68,4 +145,4 @@ function ThemeHotkey() {
   return null
 }
 
-export { ThemeProvider }
+export { ThemeProvider, useTheme }

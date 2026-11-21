@@ -1,3 +1,4 @@
+import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
@@ -18,8 +19,10 @@ export default async function TuitionDetails({ params }: PageProps<"/tuitions/[i
       <Link href="/tuitions" className="text-sm font-semibold text-indigo-700 hover:underline dark:text-indigo-300">Back to tuitions</Link>
       {tuition ? (
         <article className="mt-6 rounded-3xl border bg-card p-6 sm:p-10">
+          {tuition.bannerImage && <Image src={tuition.bannerImage} alt="" width={960} height={480}
+            unoptimized referrerPolicy="no-referrer" className="mb-6 aspect-video w-full rounded-2xl object-cover" />}
           <p className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">{tuition.subject} · {tuition.classLevel}</p>
-          <h1 className="mt-3 text-4xl font-bold tracking-tight [overflow-wrap:anywhere]">{tuition.title}</h1>
+          <h1 className="mt-3 text-4xl font-bold tracking-tight wrap-anywhere">{tuition.title}</h1>
           <dl className="my-6 grid gap-4 border-y py-5 sm:grid-cols-2">
             <div><dt className="text-sm text-muted-foreground">Tutor</dt><dd>{tuition.tutorName}</dd></div>
             <div><dt className="text-sm text-muted-foreground">Format</dt><dd>{tuition.mode}{tuition.location && ` · ${tuition.location}`}</dd></div>
@@ -27,7 +30,7 @@ export default async function TuitionDetails({ params }: PageProps<"/tuitions/[i
             <div><dt className="text-sm text-muted-foreground">Monthly fee</dt><dd>{tuitionFee.format(tuition.monthlyFee)}</dd></div>
           </dl>
           <h2 className="text-xl font-semibold">About this tuition</h2>
-          <p className="mt-3 whitespace-pre-wrap leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">{tuition.description}</p>
+          <p className="mt-3 whitespace-pre-wrap leading-relaxed text-muted-foreground wrap-anywhere">{tuition.description}</p>
           <PublicTuitionActions id={tuition.id} />
           <ApplyForTuition tuitionId={tuition.id} />
         </article>

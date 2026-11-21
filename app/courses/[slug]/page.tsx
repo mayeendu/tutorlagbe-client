@@ -4,7 +4,9 @@ import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
-import { allCourses, courseCover } from "@/components/course-catalog"
+import { courseCover } from "@/components/course-catalog"
+import { CatalogAdminActions } from "@/components/catalog-admin-actions"
+import { readCourses } from "@/lib/catalog"
 import { Button } from "@/components/ui/button"
 
 type CoursePageProps = { params: Promise<{ slug: string }> }
@@ -15,20 +17,16 @@ const formatFee = new Intl.NumberFormat("en-BD", {
   maximumFractionDigits: 0,
 })
 
-function getCourse(slug: string) {
-  const course = allCourses.find((course) => course.slug === slug)
+async function getCourse(slug: string) {
+  const course = (await readCourses()).find((course) => course.slug === slug)
   if (!course) notFound()
   return course
-}
-
-export function generateStaticParams() {
-  return allCourses.map(({ slug }) => ({ slug }))
 }
 
 export async function generateMetadata({
   params,
 }: CoursePageProps): Promise<Metadata> {
-  const course = getCourse((await params).slug)
+  const course = await getCourse((await params).slug)
   return {
     title: `${course.title} | Tutor Lagbe`,
     description: course.description,
@@ -36,7 +34,7 @@ export async function generateMetadata({
 }
 
 export default async function CoursePage({ params }: CoursePageProps) {
-  const course = getCourse((await params).slug)
+  const course = await getCourse((await params).slug)
   const facts = [
     ["Class level", course.classLevel],
     ["Difficulty", course.level],
@@ -54,13 +52,15 @@ export default async function CoursePage({ params }: CoursePageProps) {
           <ChevronLeft aria-hidden="true" className="size-4" />
           All courses
         </Link>
+        <CatalogAdminActions key={course.slug} kind="courses" entry={course} />
 
         <div className="mt-7 grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-12">
           <div className="contents lg:block">
             <header className="rounded-3xl border border-indigo-200/70 bg-card p-6 shadow-sm sm:p-10 dark:border-indigo-900/70">
               <div className="relative mb-7 aspect-3/2 overflow-hidden rounded-2xl bg-muted">
                 <Image
-                  src={courseCover(course.slug)}
+                  src={course.imageUrl ?? courseCover(course.slug)}
+                  unoptimized={Boolean(course.imageUrl)}
                   alt=""
                   fill
                   preload
