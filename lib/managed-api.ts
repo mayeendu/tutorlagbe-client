@@ -1,7 +1,7 @@
 import { authClient } from "@/lib/auth-client"
 
 export class ApiError extends Error {
-  constructor(message: string, public readonly status: number) { super(message) }
+  constructor(message: string, public readonly status: number, public readonly code?: string) { super(message) }
 }
 
 export async function authorizedRequest(path: string, method = "GET", body?: object, signal?: AbortSignal) {
@@ -30,7 +30,11 @@ export async function authorizedRequest(path: string, method = "GET", body?: obj
   })
   if (!response.ok) {
     const error = await response.json().catch(() => null)
-    throw new ApiError(typeof error?.error === "string" ? error.error : "The request failed. Try again.", response.status)
+    throw new ApiError(
+      typeof error?.error === "string" ? error.error : "The request failed. Try again.",
+      response.status,
+      typeof error?.code === "string" ? error.code : undefined,
+    )
   }
   return response
 }

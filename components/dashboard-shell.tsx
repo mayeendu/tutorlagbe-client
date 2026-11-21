@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState, type ReactNode } from "react"
 
 import { Button } from "@/components/ui/button"
+import { useManagedResource } from "@/hooks/use-managed-resource"
 import { useSession } from "@/lib/auth-client"
 import { dashboardHref, dashboardNavigation, dashboardRoles, isDashboardRole } from "@/lib/dashboard-navigation"
 
@@ -36,6 +37,11 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const user = data?.user
   const role = isDashboardRole(user?.role) ? user.role : undefined
+  const profilePath = user && (role === "tutor" || role === "student")
+    ? `/api/profiles/${encodeURIComponent(user.id)}`
+    : null
+  const { data: profile, error: profileError } = useManagedResource<{ plan: string }>(profilePath)
+  const plan = profile?.plan ?? (profileError ? user?.plan : undefined)
   const pathRole = pathname.split("/")[2]
 
   useEffect(() => {
@@ -81,7 +87,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             <DashboardAvatar user={user} />
             <p className="font-semibold wrap-anywhere">{user.name}</p>
             <p className="text-sm text-muted-foreground">{dashboardRoles[role]}</p>
-            {role !== "admin" && <Link href="/pricing" className="text-sm font-semibold text-indigo-700 hover:underline dark:text-indigo-300">{user.plan === "pro" ? "Pro · Manage billing" : "Free · View Pro plans"}</Link>}
+            {role !== "admin" && <Link href="/pricing" className="text-sm font-semibold text-indigo-700 hover:underline dark:text-indigo-300">{plan === "pro" ? "Pro user" : plan === "free" ? "Free · View Pro plans" : "View plans"}</Link>}
             <Link href="/dashboard/profile" aria-current={pathname === "/dashboard/profile" ? "page" : undefined} onClick={() => setMobileOpen(false)} className="mt-1 inline-flex min-h-10 items-center gap-2 rounded-lg border bg-background px-3 text-sm font-semibold hover:bg-muted aria-[current=page]:border-indigo-500">
               <UserRound aria-hidden="true" className="size-4" /> Profile
             </Link>

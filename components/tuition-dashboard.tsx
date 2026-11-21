@@ -1,10 +1,12 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useEffect, useState, type FormEvent } from "react"
+import { toast } from "sonner"
 
 import { ImageUpload, uploadSelectedImage } from "@/components/image-upload"
 import { Button } from "@/components/ui/button"
-import { authorizedRequest } from "@/lib/managed-api"
+import { ApiError, authorizedRequest } from "@/lib/managed-api"
 import { tuitionFee, type ManagedTuition, type ManagedTuitionPage } from "@/lib/tuition-types"
 
 const inputClass = "w-full rounded-lg border bg-background px-3 py-2.5 text-base focus-visible:outline-2 focus-visible:outline-ring"
@@ -15,6 +17,7 @@ export function TuitionForm({ item, onSaved, onCancel }: {
   onSaved?: (item: ManagedTuition) => void
   onCancel?: () => void
 }) {
+  const router = useRouter()
   const [pending, setPending] = useState(false)
   const [imageReset, setImageReset] = useState(0)
   const [message, setMessage] = useState<{ error: boolean; text: string }>()
@@ -41,6 +44,11 @@ export function TuitionForm({ item, onSaved, onCancel }: {
         setMessage({ error: false, text: "Tuition submitted for admin review." })
       }
     } catch (error) {
+      if (!item && error instanceof ApiError && error.status === 409 && error.code === "TUITION_LIMIT_REACHED") {
+        toast.warning("Please become pro member", { toasterId: "tuition" })
+        router.push("/pricing")
+        return
+      }
       setMessage({ error: true, text: error instanceof Error ? error.message : "Could not submit tuition." })
     } finally {
       setPending(false)
