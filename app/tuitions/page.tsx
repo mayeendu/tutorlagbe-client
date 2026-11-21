@@ -87,7 +87,7 @@ export default async function TuitionsPage({ searchParams }: PageProps<"/tuition
 
       {!results ? (
         <p className="rounded-2xl border bg-card p-6 text-muted-foreground">
-          Tuition listings are temporarily unavailable. You can still <Link href="/courses" className="font-medium underline">browse the course catalog</Link>.
+          Tuition listings are temporarily unavailable. <a href={linkTo(page)} className="font-medium underline">Try again</a>.
         </p>
       ) : results.items.length ? (
         <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
