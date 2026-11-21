@@ -1,10 +1,10 @@
 import { BarChart3, Timer } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { readCourses } from "@/lib/catalog"
-import { popular, recommended, type Course } from "@/lib/course-seeds"
-
-import { Button } from "@/components/ui/button"
+import { TuitionCard } from "@/components/tuition-card"
+import type { Course } from "@/lib/course-seeds"
+import { readTuitions } from "@/lib/tuition-api"
+import type { TuitionPage } from "@/lib/tuition-types"
 
 export function courseCover(slug: string) {
   return `/courses/${slug}.webp`
@@ -73,18 +73,17 @@ export function CourseGrid({
   )
 }
 
-const collections = [
-  {
-    id: "recommended-courses",
-    title: "Recommended course for you",
-    courses: recommended,
-  },
-  { id: "popular-courses", title: "Our popular course", courses: popular },
-]
-
 export async function HomeCourseSections() {
-  const catalog = await readCourses()
-  return collections.map(({ id, title, courses }) => (
+  const response = await readTuitions()
+  const result: TuitionPage | null = response?.ok ? await response.json().catch(() => null) : null
+  const latest = result?.items.slice(0, 6) ?? []
+  const split = Math.ceil(latest.length / 2)
+  const sections = [
+    { id: "recommended-courses", title: "Recommended course for you", courses: latest.slice(0, split) },
+    { id: "popular-courses", title: "Our popular course", courses: latest.slice(split) },
+  ]
+
+  return sections.map(({ id, title, courses }) => (
     <section key={id} aria-labelledby={id} className="border-t odd:bg-muted/45">
       <div className="mx-auto max-w-360 px-5 py-12 sm:px-8 sm:py-16 lg:px-12 xl:px-16">
         <h2
@@ -93,15 +92,22 @@ export async function HomeCourseSections() {
         >
           {title}
         </h2>
-        <CourseGrid courses={catalog.filter((course) => courses.some(({ slug }) => slug === course.slug))} heading="h3" />
+        {courses.length ? (
+          <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {courses.map((tuition) => <TuitionCard key={tuition.id} tuition={tuition} heading="h3" />)}
+          </ul>
+        ) : (
+          <p className="text-muted-foreground">
+            {result ? "No tutor courses to show here yet." : "Tutor courses are temporarily unavailable."}
+          </p>
+        )}
         <div className="mt-8 flex justify-center">
-          <Button
-            nativeButton={false}
-            render={<Link href="/courses" />}
-            className="h-12 bg-indigo-700 px-6 text-base text-white hover:bg-indigo-800"
+          <Link
+            href="/tuitions"
+            className="inline-flex h-12 items-center justify-center rounded-lg bg-indigo-700 px-6 text-base font-medium text-white transition-colors hover:bg-indigo-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
-            All courses
-          </Button>
+            All Courses
+          </Link>
         </div>
       </div>
     </section>

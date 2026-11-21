@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button"
 import { authClient, useSession } from "@/lib/auth-client"
 
 const links = [
-  { href: "/courses", label: "Our courses" },
+  { href: "/tuitions", label: "Our courses" },
   { href: "/teachers", label: "Our teachers" },
   { href: "/learning-materials", label: "Resources" },
 ]
