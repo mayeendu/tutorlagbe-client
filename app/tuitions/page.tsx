@@ -8,10 +8,11 @@ import { readTuitions } from "@/lib/tuition-api"
 import type { TuitionPage } from "@/lib/tuition-types"
 
 const fields = [
-  { key: "q", label: "Search", placeholder: "Title or subject", max: 100 },
-  { key: "subject", label: "Subject", placeholder: "Any subject", max: 60 },
-  { key: "classLevel", label: "Class level", placeholder: "Any class", max: 40 },
+  { key: "q", max: 100 },
+  { key: "subject", max: 60 },
+  { key: "classLevel", max: 40 },
 ] as const
+type TuitionFilterOptions = { subjects: string[]; classLevels: string[] }
 const control = "h-11 w-full rounded-lg border bg-background px-3 text-base focus-visible:outline-2 focus-visible:outline-ring"
 const pageLink = "inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg border px-3 focus-visible:outline-2 focus-visible:outline-ring"
 
@@ -34,8 +35,13 @@ export default async function TuitionsPage({ searchParams }: PageProps<"/tuition
 
   const request = new URLSearchParams(filters)
   request.set("page", String(page))
-  const response = await readTuitions(`?${request}`)
+  const [response, filterResponse] = await Promise.all([readTuitions(`?${request}`), readTuitions("/filters")])
   const results: TuitionPage | null = response?.ok ? await response.json().catch(() => null) : null
+  const options: TuitionFilterOptions | null = filterResponse?.ok ? await filterResponse.json().catch(() => null) : null
+  const dropdowns = [
+    { key: "subject", label: "Subject", placeholder: "Any subject", values: options?.subjects ?? results?.items.map((item) => item.subject) ?? [] },
+    { key: "classLevel", label: "Class level", placeholder: "Any class", values: options?.classLevels ?? results?.items.map((item) => item.classLevel) ?? [] },
+  ]
   const totalPages = results?.totalPages ?? page + Number(results?.hasMore === true)
   if (page > totalPages) redirect(linkTo(totalPages))
   const pageNumbers = [...new Set([1, page - 1, page, page + 1, totalPages])]
@@ -46,13 +52,26 @@ export default async function TuitionsPage({ searchParams }: PageProps<"/tuition
     <main className="mx-auto max-w-360 px-5 py-12 sm:px-8 lg:px-12">
       <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">Browse tuitions</h1>
       <p className="mt-3 text-muted-foreground">Find online or in-person lessons by subject and class level.</p>
-      <TuitionFilterForm action="/tuitions" aria-label="Filter tuitions" className="my-7 grid gap-4 rounded-2xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-5 lg:items-end">
-        {fields.map(({ key, label, placeholder, max }) => (
-          <label key={key} className="grid gap-1.5 text-sm font-medium">
-            {label}
-            <input name={key} defaultValue={filters.get(key) ?? ""} placeholder={placeholder} maxLength={max} className={control} />
-          </label>
-        ))}
+      <TuitionFilterForm key={filters.toString()} action="/tuitions" aria-label="Filter tuitions" className="my-7 grid gap-4 rounded-2xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-5 lg:items-end">
+        <label className="grid gap-1.5 text-sm font-medium">
+          Search
+          <input name="q" defaultValue={filters.get("q") ?? ""} placeholder="Title or subject" maxLength={100} className={control} />
+        </label>
+        {dropdowns.map(({ key, label, placeholder, values }) => {
+          const selected = filters.get(key) ?? ""
+          const choices = [...new Set(values)]
+          const matchingValue = choices.find((value) => value.toLowerCase() === selected.toLowerCase())
+          return (
+            <label key={key} className="grid gap-1.5 text-sm font-medium">
+              {label}
+              <select name={key} defaultValue={matchingValue ?? selected} className={control}>
+                <option value="">{placeholder}</option>
+                {selected && !matchingValue && <option>{selected}</option>}
+                {choices.map((value) => <option key={value}>{value}</option>)}
+              </select>
+            </label>
+          )
+        })}
         <label className="grid gap-1.5 text-sm font-medium">
           Mode
           <select name="mode" defaultValue={filters.get("mode") ?? ""} className={control}>
