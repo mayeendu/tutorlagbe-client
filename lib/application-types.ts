@@ -11,7 +11,9 @@ type Application = {
   appliedAt: string
 }
 
-export type StudentApplication = Application & { tutorName: string; tutorEmail: string }
+export type TuitionReview = { rating: number; feedback: string; createdAt: string }
+export type TuitionReviewPage = { items: TuitionReview[]; hasMore: boolean }
+export type StudentApplication = Application & { tutorName: string; tutorEmail: string; review?: TuitionReview }
 export type ReceivedApplication = Application & {
   studentName: string; studentEmail: string; studentPhone: string; studentNote: string
 }

@@ -9,11 +9,13 @@ async function forward(request: Request) {
   const moderate = request.method === "PATCH" && /^\/[\da-f]{24}\/moderation$/i.test(path)
   const managedList = request.method === "GET" && path === "/manage"
   const managedDetails = ["GET", "PATCH", "DELETE"].includes(request.method) && /^\/manage\/[\da-f]{24}$/i.test(path)
-  if (!list && !create && !moderate && !managedList && !managedDetails) {
+  const savedList = request.method === "GET" && path === "/saved"
+  const savedDetails = ["GET", "PUT", "DELETE"].includes(request.method) && /^\/saved\/[\da-f]{24}$/i.test(path)
+  if (!list && !create && !moderate && !managedList && !managedDetails && !savedList && !savedDetails) {
     return Response.json({ error: "Route not found." }, { status: 404 })
   }
 
   return proxyApi(request, `/api/tuitions${path}`)
 }
 
-export { forward as GET, forward as POST, forward as PATCH, forward as DELETE }
+export { forward as GET, forward as POST, forward as PATCH, forward as PUT, forward as DELETE }

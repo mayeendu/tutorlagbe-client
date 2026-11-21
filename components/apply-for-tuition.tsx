@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useState, type FormEvent } from "react"
 
 import { ApplicationBadge } from "@/components/application-status"
+import { TuitionReviewForm } from "@/components/tuition-review-form"
 import { Button } from "@/components/ui/button"
 import { notifyError, notifyInvalidForm, notifySuccess } from "@/lib/notify"
 import { useManagedResource } from "@/hooks/use-managed-resource"
@@ -18,7 +19,7 @@ function StudentApplyForm({ tuitionId }: { tuitionId: string }) {
   const [submitted, setSubmitted] = useState<StudentApplication>()
   const [pending, setPending] = useState(false)
   const [message, setMessage] = useState("")
-  const application = submitted ?? data?.items[0]
+  const application = data?.items[0] ?? submitted
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -45,6 +46,7 @@ function StudentApplyForm({ tuitionId }: { tuitionId: string }) {
     <div className="space-y-3">
       <p role="status" className="flex flex-wrap items-center gap-2">{submitted ? "Application submitted." : "You already applied for this tuition."} <ApplicationBadge status={application.status} /></p>
       <Link className="text-sm font-semibold underline" href="/dashboard/student/my-applications">View my applications</Link>
+      {application.status === "accepted" && <TuitionReviewForm key={application.id} application={application} reload={reload} />}
     </div>
   )
   if (error) return <p role="alert">{error.message} <Button variant="outline" onClick={reload}>Retry</Button></p>

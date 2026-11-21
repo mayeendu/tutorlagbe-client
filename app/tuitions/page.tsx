@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { redirect } from "next/navigation"
 
 import { TuitionCard } from "@/components/tuition-card"
 import { TuitionFilterForm } from "@/components/tuition-filter-form"
@@ -12,6 +13,7 @@ const fields = [
   { key: "classLevel", label: "Class level", placeholder: "Any class", max: 40 },
 ] as const
 const control = "h-11 w-full rounded-lg border bg-background px-3 text-base focus-visible:outline-2 focus-visible:outline-ring"
+const pageLink = "inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg border px-3 focus-visible:outline-2 focus-visible:outline-ring"
 
 export default async function TuitionsPage({ searchParams }: PageProps<"/tuitions">) {
   const params = await searchParams
@@ -34,6 +36,11 @@ export default async function TuitionsPage({ searchParams }: PageProps<"/tuition
   request.set("page", String(page))
   const response = await readTuitions(`?${request}`)
   const results: TuitionPage | null = response?.ok ? await response.json().catch(() => null) : null
+  const totalPages = results?.totalPages ?? page + Number(results?.hasMore === true)
+  if (page > totalPages) redirect(linkTo(totalPages))
+  const pageNumbers = [...new Set([1, page - 1, page, page + 1, totalPages])]
+    .filter((number) => number >= 1 && number <= totalPages)
+    .sort((a, b) => a - b)
 
   return (
     <main className="mx-auto max-w-360 px-5 py-12 sm:px-8 lg:px-12">
@@ -70,10 +77,25 @@ export default async function TuitionsPage({ searchParams }: PageProps<"/tuition
       ) : (
         <p className="rounded-2xl border border-dashed p-6 text-muted-foreground">No tuitions match your filters.</p>
       )}
-      {results && (page > 1 || results.hasMore) && (
-        <nav aria-label="Tuition pages" className="mt-6 flex flex-wrap gap-4 text-sm font-medium">
-          {page > 1 && <Link href={linkTo(page - 1)} className="underline">Previous page</Link>}
-          {results.hasMore && <Link href={linkTo(page + 1)} className="underline">Next page</Link>}
+      {results && totalPages > 1 && (
+        <nav aria-label="Tuition pages" className="mt-8 flex flex-wrap items-center justify-center gap-2 text-sm font-medium">
+          {page > 1 && <Link href={linkTo(page - 1)} rel="prev" className={`${pageLink} hover:bg-muted`}>Previous</Link>}
+          <ul className="flex flex-wrap items-center gap-2">
+            {pageNumbers.map((number, index) => (
+              <li key={number} className="flex items-center gap-2">
+                {index > 0 && number - pageNumbers[index - 1] > 1 && <span aria-hidden="true">…</span>}
+                <Link
+                  href={linkTo(number)}
+                  aria-label={`Page ${number}`}
+                  aria-current={number === page ? "page" : undefined}
+                  className={`${pageLink} ${number === page ? "border-indigo-700 bg-indigo-700 text-white" : "hover:bg-muted"}`}
+                >
+                  {number}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          {page < totalPages && <Link href={linkTo(page + 1)} rel="next" className={`${pageLink} hover:bg-muted`}>Next</Link>}
         </nav>
       )}
     </main>

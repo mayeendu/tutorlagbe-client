@@ -6,7 +6,8 @@ function forward(request: Request) {
   const apply = request.method === "POST" && /^\/api\/applications\/?$/.test(path)
   const cancel = request.method === "DELETE" && /^\/api\/applications\/[\da-f]{24}$/i.test(path)
   const review = request.method === "PATCH" && /^\/api\/applications\/[\da-f]{24}\/status$/i.test(path)
-  if (!list && !apply && !cancel && !review) {
+  const submitReview = request.method === "POST" && /^\/api\/applications\/[\da-f]{24}\/review$/i.test(path)
+  if (!list && !apply && !cancel && !review && !submitReview) {
     return Response.json({ error: "Route not found." }, { status: 404 })
   }
   return proxyApi(request, path)

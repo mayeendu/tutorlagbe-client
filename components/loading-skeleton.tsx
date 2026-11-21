@@ -8,8 +8,14 @@ export function LoadingSkeleton({ label, variant = "rows", showHeading = false }
   const shape = "rounded-md bg-muted"
 
   return (
-    <div role="status">
+    <div role="status" className="relative">
       <span className="sr-only">{label}</span>
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-10 grid place-items-center">
+        <p className="flex items-center gap-2 rounded-xl border bg-card px-4 py-3 text-sm font-medium text-card-foreground shadow-sm">
+          <Spinner className="size-7" />
+          loading......
+        </p>
+      </div>
       <div aria-hidden="true" className="space-y-5 motion-safe:animate-pulse">
         {showHeading && (
           <div className="space-y-3">
@@ -38,3 +44,5 @@ export function LoadingSkeleton({ label, variant = "rows", showHeading = false }
     </div>
   )
 }
+import { Spinner } from "@/components/ui/spinner"
+

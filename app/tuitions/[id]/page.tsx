@@ -5,15 +5,24 @@ import { notFound } from "next/navigation"
 import { ApplyForTuition } from "@/components/apply-for-tuition"
 import { ToastFeedback } from "@/components/toast-feedback"
 import { PublicTuitionActions } from "@/components/managed-tuitions"
+import { TuitionBookmark } from "@/components/tuition-bookmark"
+import { TuitionReviews } from "@/components/tuition-reviews"
+import type { TuitionReviewPage } from "@/lib/application-types"
 import { readTuitions } from "@/lib/tuition-api"
 import { tuitionFee, type Tuition } from "@/lib/tuition-types"
 
-export default async function TuitionDetails({ params }: PageProps<"/tuitions/[id]">) {
-  const { id } = await params
+export default async function TuitionDetails({ params, searchParams }: PageProps<"/tuitions/[id]">) {
+  const [{ id }, { reviewPage }] = await Promise.all([params, searchParams])
   if (!/^[\da-f]{24}$/i.test(id)) notFound()
-  const response = await readTuitions(`/${id}`)
+  const pageValue = typeof reviewPage === "string" ? Number(reviewPage) : 1
+  const page = Number.isInteger(pageValue) && pageValue >= 1 && pageValue <= 1000 ? pageValue : 1
+  const [response, reviewResponse] = await Promise.all([
+    readTuitions(`/${id}`),
+    readTuitions(`/${id}/reviews?page=${page}`),
+  ])
   if (response?.status === 404) notFound()
   const tuition: Tuition | null = response?.ok ? await response.json().catch(() => null) : null
+  const reviews: TuitionReviewPage | null = reviewResponse?.ok ? await reviewResponse.json().catch(() => null) : null
 
   return (
     <main className="mx-auto max-w-4xl px-5 py-12 sm:px-8">
@@ -33,8 +42,10 @@ export default async function TuitionDetails({ params }: PageProps<"/tuitions/[i
           </dl>
           <h2 className="text-xl font-semibold">About this tuition</h2>
           <p className="mt-3 whitespace-pre-wrap leading-relaxed text-muted-foreground wrap-anywhere">{tuition.description}</p>
+          <TuitionBookmark key={tuition.id} tuitionId={tuition.id} />
           <PublicTuitionActions id={tuition.id} />
           <ApplyForTuition tuitionId={tuition.id} />
+          <TuitionReviews tuitionId={tuition.id} reviews={reviews} page={page} />
         </article>
       ) : <h1 className="mt-6 text-2xl font-semibold">Tuition details are temporarily unavailable.</h1>}
     </main>

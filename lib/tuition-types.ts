@@ -13,7 +13,7 @@ export type Tuition = {
   createdAt: string
 }
 
-export type TuitionPage = { items: Tuition[]; hasMore: boolean }
+export type TuitionPage = { items: Tuition[]; hasMore: boolean; totalPages?: number }
 export type ManagedTuition = Tuition & { approvalStatus: "pending" | "approved" | "rejected"; isActive: boolean; revision?: number }
 export type ManagedTuitionPage = { items: ManagedTuition[]; hasMore: boolean }
 

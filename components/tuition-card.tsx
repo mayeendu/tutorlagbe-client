@@ -1,9 +1,10 @@
 import Image from "next/image"
 import Link from "next/link"
+import type { ReactNode } from "react"
 
 import { tuitionFee, type Tuition } from "@/lib/tuition-types"
 
-export function TuitionCard({ tuition, heading: Heading = "h2" }: { tuition: Tuition; heading?: "h2" | "h3" }) {
+export function TuitionCard({ tuition, heading: Heading = "h2", action }: { tuition: Tuition; heading?: "h2" | "h3"; action?: ReactNode }) {
   return (
     <li className="relative flex min-w-0 flex-col gap-4 rounded-2xl border bg-card p-5 shadow-sm transition hover:border-indigo-500/50 hover:shadow-md wrap-anywhere sm:p-6">
       <div className="relative aspect-2/1 overflow-hidden rounded-xl bg-muted">
@@ -32,6 +33,7 @@ export function TuitionCard({ tuition, heading: Heading = "h2" }: { tuition: Tui
           View details<span className="sr-only"> for {tuition.title}</span>
         </Link>
       </div>
+      {action && <div className="relative z-10 w-fit">{action}</div>}
     </li>
   )
 }
