@@ -7,6 +7,7 @@ import { notifyError, notifySuccess } from "@/lib/notify"
 export const authClient = createAuthClient({
   plugins: [inferAdditionalFields<typeof auth>(), jwtClient()],
   fetchOptions: {
+    baseURL: "/api/auth",
     onSuccess({ request }) {
       const path = String(request.url)
       if (path.endsWith("/sign-up/email")) notifySuccess("Account created.")
