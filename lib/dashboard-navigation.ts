@@ -22,6 +22,7 @@ export const dashboardNavigation: Record<DashboardRole, readonly DashboardLink[]
     { section: "", label: "Dashboard", icon: LayoutDashboard, description: "Your learning overview" },
     { section: "my-courses", label: "My courses", icon: BookOpen, description: "View courses you are enrolled in." },
     { section: "apply-courses", label: "Apply courses", icon: GraduationCap, description: "Explore approved tuitions by subject, class level, and lesson format." },
+    { section: "my-applications", label: "My applications", icon: ClipboardList, description: "Track your tuition applications and cancel pending requests." },
     { section: "my-progress", label: "My progress", icon: ChartNoAxesCombined, description: "Review your learning progress." },
     { section: "my-result", label: "My result", icon: Trophy, description: "See your assessment results." },
     { section: "quiz", label: "Quiz", icon: CircleHelp, description: "Find quizzes for your courses." },

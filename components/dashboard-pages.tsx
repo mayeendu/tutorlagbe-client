@@ -9,7 +9,7 @@ import { dashboardHref, dashboardNavigation, dashboardRoles, type DashboardRole 
 export function DashboardOverview({ role }: { role: "student" | "admin" }) {
   const { data } = useSession()
   const dashboardLinks = role === "student"
-    ? ["apply-courses", "my-courses", "my-progress"]
+    ? ["apply-courses", "my-courses", "my-applications"]
     : ["tuitions", "users", "transactions"]
   const name = data?.user.name.trim().split(/\s+/)[0]
 
