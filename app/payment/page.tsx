@@ -20,7 +20,7 @@ async function readCheckoutConfig() {
     const response = await fetch(url, {
       cache: "no-store",
       redirect: "error",
-      signal: AbortSignal.timeout(1500),
+      signal: AbortSignal.timeout(5000),
     })
     if (!response.ok) return null
     const config = await response.json()
@@ -39,8 +39,8 @@ export default async function PaymentPage({
   if (plan !== "plus" && plan !== "pro") redirect("/pricing")
   const selected = paidPlans[plan]
   const development = process.env.NODE_ENV !== "production"
-  const config = development ? await readCheckoutConfig() : null
-  const useMock = config?.mockCheckout === true &&
+  const config = development || plan === "pro" ? await readCheckoutConfig() : null
+  const useMock = development && config?.mockCheckout === true &&
     (plan === "plus" || process.env.TUTORLAGBE_CHECKOUT_MODE === "mock" || !config.stripeTestCheckout)
 
   return (
@@ -75,7 +75,7 @@ export default async function PaymentPage({
 
           {useMock ? (
             <MockCheckout key={plan} plan={plan} />
-          ) : plan === "pro" && (!development || config?.stripeTestCheckout) ? (
+          ) : plan === "pro" && config?.stripeTestCheckout ? (
             <StripeCheckout />
           ) : (
             <>
@@ -84,7 +84,9 @@ export default async function PaymentPage({
                 Pay
               </Button>
               <p id="checkout-status" className="mt-3 text-center text-sm text-muted-foreground">
-                {plan === "plus" ? "Plus checkout is unavailable." : "Checkout is unavailable."}
+                {plan === "plus"
+                  ? "Plus checkout is unavailable."
+                  : "Checkout is temporarily unavailable. Please try again shortly."}
               </p>
             </>
           )}

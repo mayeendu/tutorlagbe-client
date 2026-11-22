@@ -6,7 +6,11 @@ const authErrors = new Map([
   ["CROSS_SITE_NAVIGATION_LOGIN_BLOCKED", "Open TutorLagbe directly to sign in."],
 ])
 
-export async function safeEmailAuthResponse(response: Response, action: "sign-in" | "sign-up") {
+export async function safeEmailAuthResponse(
+  response: Response,
+  action: "sign-in" | "sign-up",
+  source: "express" | "legacy"
+) {
   const isJson = response.headers.get("content-type")?.includes("application/json")
   if (response.ok && isJson || response.status >= 300 && response.status < 400) return response
 
@@ -21,7 +25,7 @@ export async function safeEmailAuthResponse(response: Response, action: "sign-in
         : status >= 500 ? ["AUTH_UNAVAILABLE", "The authentication service is temporarily unavailable. Try again shortly."]
           : ["AUTH_REQUEST_FAILED", "Authentication could not be completed. Check your details and try again."]
 
-  console.warn("[Auth] Email request failed.", { action, status, code })
+  console.warn("[Auth] Email request failed.", { action, status, code, source })
   const headers = new Headers(response.headers)
   headers.delete("content-length")
   headers.delete("content-encoding")

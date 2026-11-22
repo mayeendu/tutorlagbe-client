@@ -1,5 +1,5 @@
 import { safeEmailAuthResponse } from "@/lib/auth-email-response"
-import { apiUrl } from "@/lib/tuition-api"
+import { apiUrl, isFrontendApiTarget } from "@/lib/tuition-api"
 
 const requestHeaders = [
   "authorization",
@@ -7,6 +7,7 @@ const requestHeaders = [
   "cookie",
   "origin",
   "referer",
+  "sec-fetch-dest",
   "sec-fetch-mode",
   "sec-fetch-site",
 ]
@@ -26,9 +27,9 @@ async function handleAuth(request: Request) {
   const emailAction = request.method === "POST"
     ? path === "/api/auth/sign-in/email" ? "sign-in" : path === "/api/auth/sign-up/email" ? "sign-up" : undefined
     : undefined
-  function emailUnavailable(reason: string) {
-    console.warn("[Auth] Email request failed.", {
-      action: emailAction,
+  function authUnavailable(reason: string) {
+    console.warn("[Auth] Request failed.", {
+      action: emailAction ?? "other",
       status: 503,
       code: "AUTH_UNAVAILABLE",
       reason,
@@ -38,30 +39,38 @@ async function handleAuth(request: Request) {
 
   const apiOrigin = process.env.TUTORLAGBE_API_URL?.trim()
   if (!apiOrigin) {
+    if (process.env.NODE_ENV === "production" || process.env.VERCEL === "1") {
+      return authUnavailable("missing_api_origin")
+    }
     if (isToken) {
       return unavailable("Dashboard access needs the Express API. Start it with Next.js or configure TUTORLAGBE_API_URL.")
     }
     try {
       const { auth } = await import("@/lib/auth")
       const response = await auth.handler(request)
-      return emailAction ? await safeEmailAuthResponse(response, emailAction) : response
+      return emailAction ? await safeEmailAuthResponse(response, emailAction, "legacy") : response
     } catch {
-      if (emailAction) return emailUnavailable("legacy_handler_failed")
-      return unavailable("Authentication is temporarily unavailable.")
+      return authUnavailable("legacy_handler_failed")
     }
   }
 
   const target = apiUrl(incoming.pathname)
-  if (!target) {
-    if (emailAction) return emailUnavailable("invalid_api_origin")
-    return unavailable("TUTORLAGBE_API_URL must be the Express server origin.")
+  if (!target || (process.env.VERCEL === "1" && target.protocol !== "https:")) {
+    return authUnavailable("invalid_api_origin")
+  }
+  if (isFrontendApiTarget(target, incoming)) {
+    return authUnavailable("api_origin_is_frontend")
   }
   target.search = incoming.search
 
   const headers = new Headers()
+
   for (const name of requestHeaders) {
     const value = request.headers.get(name)
-    if (value !== null) headers.set(name, value)
+
+    if (value !== null) {
+      headers.set(name, value)
+    }
   }
 
   try {
@@ -92,10 +101,9 @@ async function handleAuth(request: Request) {
       status: upstream.status,
       headers: responseHeaders,
     })
-    return emailAction ? await safeEmailAuthResponse(response, emailAction) : response
+    return emailAction ? await safeEmailAuthResponse(response, emailAction, "express") : response
   } catch {
-    if (emailAction) return emailUnavailable("upstream_request_failed")
-    return unavailable()
+    return authUnavailable("upstream_request_failed")
   }
 }
 

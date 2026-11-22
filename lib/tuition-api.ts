@@ -10,6 +10,12 @@ export function apiUrl(path: string) {
   return origin
 }
 
+export function isFrontendApiTarget(target: URL, requestUrl: URL) {
+  return target.origin === requestUrl.origin ||
+    target.host === process.env.VERCEL_URL ||
+    target.host === process.env.VERCEL_PROJECT_PRODUCTION_URL
+}
+
 export async function readTuitions(path = "") {
   const url = apiUrl("/api/tuitions")
   if (!url) {

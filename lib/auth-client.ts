@@ -8,6 +8,7 @@ export const authClient = createAuthClient({
   plugins: [inferAdditionalFields<typeof auth>(), jwtClient()],
   fetchOptions: {
     baseURL: "/api/auth",
+    credentials: "same-origin",
     onSuccess({ request }) {
       const path = String(request.url)
       if (path.endsWith("/sign-up/email")) notifySuccess("Account created.")
