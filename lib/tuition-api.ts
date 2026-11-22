@@ -1,5 +1,17 @@
+import { existsSync } from "node:fs"
+import { resolve } from "node:path"
+
+export function apiOriginSetting() {
+  const configured = process.env.TUTORLAGBE_API_URL?.trim()
+  if (configured) return configured
+  if (!process.env.VERCEL && existsSync(resolve(process.cwd(), "../tutorlagbe-server/api/start.ts"))) {
+    return "http://127.0.0.1:8000"
+  }
+  return undefined
+}
+
 export function apiUrl(path: string) {
-  const origin = URL.parse(process.env.TUTORLAGBE_API_URL?.trim() ?? "")
+  const origin = URL.parse(apiOriginSetting() ?? "")
   if (
     !origin || !["http:", "https:"].includes(origin.protocol) ||
     origin.pathname !== "/" || origin.username || origin.password ||
@@ -10,8 +22,8 @@ export function apiUrl(path: string) {
   return origin
 }
 
-export function isFrontendApiTarget(target: URL, requestUrl: URL) {
-  return target.origin === requestUrl.origin ||
+export function isFrontendApiTarget(target: URL, requestUrl?: URL) {
+  return target.origin === requestUrl?.origin ||
     target.host === process.env.VERCEL_URL ||
     target.host === process.env.VERCEL_PROJECT_PRODUCTION_URL
 }
@@ -20,6 +32,10 @@ export async function readTuitions(path = "") {
   const url = apiUrl("/api/tuitions")
   if (!url) {
     console.warn("[Tuitions] TUTORLAGBE_API_URL is missing or is not an HTTP(S) origin.")
+    return null
+  }
+  if (isFrontendApiTarget(url)) {
+    console.warn("[Tuitions] TUTORLAGBE_API_URL points to the Next.js deployment.")
     return null
   }
   const target = new URL(`/api/tuitions${path}`, url)

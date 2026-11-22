@@ -51,7 +51,7 @@ export function CourseGrid({
                 </div>
                 <Heading className="mb-4 flex-1 leading-6 font-semibold">
                   <Link
-                    href={`/courses/${slug}`}
+                    href={`/tuitions?${new URLSearchParams({ q: title.slice(0, 100), mode: mode === "Physical" ? "Offline" : "Online" })}`}
                     className="outline-none after:absolute after:inset-0 after:rounded-2xl focus-visible:after:ring-2 focus-visible:after:ring-indigo-500"
                   >
                     {title}

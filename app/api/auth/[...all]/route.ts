@@ -1,5 +1,5 @@
 import { safeEmailAuthResponse } from "@/lib/auth-email-response"
-import { apiUrl, isFrontendApiTarget } from "@/lib/tuition-api"
+import { apiOriginSetting, apiUrl, isFrontendApiTarget } from "@/lib/tuition-api"
 
 const requestHeaders = [
   "authorization",
@@ -37,11 +37,8 @@ async function handleAuth(request: Request) {
     return unavailable("The authentication service is temporarily unavailable. Try again shortly.")
   }
 
-  const apiOrigin = process.env.TUTORLAGBE_API_URL?.trim()
+  const apiOrigin = apiOriginSetting()
   if (!apiOrigin) {
-    if (process.env.NODE_ENV === "production" || process.env.VERCEL === "1") {
-      return authUnavailable("missing_api_origin")
-    }
     if (isToken) {
       return unavailable("Dashboard access needs the Express API. Start it with Next.js or configure TUTORLAGBE_API_URL.")
     }
@@ -55,7 +52,7 @@ async function handleAuth(request: Request) {
   }
 
   const target = apiUrl(incoming.pathname)
-  if (!target || (process.env.VERCEL === "1" && target.protocol !== "https:")) {
+  if (!target) {
     return authUnavailable("invalid_api_origin")
   }
   if (isFrontendApiTarget(target, incoming)) {

@@ -6,7 +6,7 @@ import { redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { StripeCheckout } from "@/components/stripe-checkout"
 import { paidPlans } from "@/lib/paid-plans"
-import { apiUrl } from "@/lib/tuition-api"
+import { apiUrl, isFrontendApiTarget } from "@/lib/tuition-api"
 
 import { MockCheckout } from "./mock-checkout"
 
@@ -14,7 +14,12 @@ export const metadata: Metadata = { title: "Payment | Tutor Lagbe" }
 
 async function readCheckoutConfig() {
   const url = apiUrl("/api/payments/config")
-  if (!url) return null
+  if (!url || isFrontendApiTarget(url)) {
+    console.warn("[Payments] Cannot read checkout configuration.", {
+      reason: url ? "api_origin_is_frontend" : "invalid_api_origin",
+    })
+    return null
+  }
 
   try {
     const response = await fetch(url, {
@@ -22,10 +27,25 @@ async function readCheckoutConfig() {
       redirect: "error",
       signal: AbortSignal.timeout(5000),
     })
-    if (!response.ok) return null
+    if (!response.ok) {
+      console.warn("[Payments] Checkout configuration request failed.", { status: response.status })
+      return null
+    }
     const config = await response.json()
-    return { stripeTestCheckout: config?.stripeTestCheckout === true, mockCheckout: config?.mockCheckout === true }
-  } catch {
+    if (typeof config?.stripeTestCheckout !== "boolean") {
+      console.warn("[Payments] Checkout configuration response is invalid.")
+      return null
+    }
+    return {
+      stripeTestCheckout: config.stripeTestCheckout,
+      // Older Express releases only support Pro.
+      stripeCheckoutPlans: Array.isArray(config.stripeCheckoutPlans) ? config.stripeCheckoutPlans : ["pro"],
+      mockCheckout: config.mockCheckout === true,
+    }
+  } catch (error) {
+    console.warn("[Payments] Cannot read checkout configuration.", {
+      reason: error instanceof Error && error.name === "TimeoutError" ? "timeout" : "unreadable_response",
+    })
     return null
   }
 }
@@ -38,10 +58,14 @@ export default async function PaymentPage({
   const { plan } = await searchParams
   if (plan !== "plus" && plan !== "pro") redirect("/pricing")
   const selected = paidPlans[plan]
-  const development = process.env.NODE_ENV !== "production"
-  const config = development || plan === "pro" ? await readCheckoutConfig() : null
-  const useMock = development && config?.mockCheckout === true &&
-    (plan === "plus" || process.env.TUTORLAGBE_CHECKOUT_MODE === "mock" || !config.stripeTestCheckout)
+  const config = await readCheckoutConfig()
+  const useStripe = config?.stripeTestCheckout === true && config.stripeCheckoutPlans.includes(plan)
+  const useMock = process.env.NODE_ENV === "development" && config?.mockCheckout === true
+  const unavailable = !config
+    ? "Could not connect to the checkout service."
+    : !config.stripeTestCheckout
+      ? "Stripe Test Mode is not configured on the checkout service."
+      : `${selected.name} requires a newer version of the checkout service.`
 
   return (
     <main className="border-t bg-linear-to-b from-indigo-50/70 to-background px-5 py-12 dark:from-indigo-950/35 sm:py-20">
@@ -73,20 +97,18 @@ export default async function PaymentPage({
             </dd>
           </dl>
 
-          {useMock ? (
+          {useStripe ? (
+            <StripeCheckout key={plan} plan={plan} />
+          ) : useMock ? (
             <MockCheckout key={plan} plan={plan} />
-          ) : plan === "pro" && config?.stripeTestCheckout ? (
-            <StripeCheckout />
           ) : (
             <>
               <Button type="button" disabled aria-describedby="checkout-status" className="mt-6 h-11 w-full bg-indigo-700 text-white">
                 <CreditCard aria-hidden="true" />
                 Pay
               </Button>
-              <p id="checkout-status" className="mt-3 text-center text-sm text-muted-foreground">
-                {plan === "plus"
-                  ? "Plus checkout is unavailable."
-                  : "Checkout is temporarily unavailable. Please try again shortly."}
+              <p id="checkout-status" role="status" className="mt-3 text-center text-sm text-muted-foreground">
+                {unavailable} <a href={`/payment?plan=${plan}`} className="font-semibold underline">Try again</a>
               </p>
             </>
           )}

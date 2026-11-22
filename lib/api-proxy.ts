@@ -4,7 +4,7 @@ export async function proxyApi(request: Request, path: string, timeout = 7000) {
   const target = apiUrl(path)
   const incoming = new URL(request.url)
   const paymentRoute = path.startsWith("/api/payments/")
-    ? path.replace(/^\/api\/payments\/status\/.+$/, "/api/payments/status/:id")
+    ? path.replace(/^(\/api\/payments\/(?:status|mock-checkout))\/(?:cs_|mock_).+$/, "$1/:id")
     : undefined
   const selfTarget = target && isFrontendApiTarget(target, incoming)
   let failure = selfTarget ? "api_origin_is_frontend" : "invalid_api_origin"

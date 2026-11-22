@@ -92,7 +92,7 @@ export function CatalogAdminActions(props: Props) {
       await authorizedRequest(path, method, payload)
       notifySuccess(method === "DELETE" ? "Catalog entry deleted." : uploading ? "Image updated." : "Catalog changes saved.")
       if (method === "DELETE") {
-        router.replace(isCourse ? "/courses" : "/learning-materials")
+        router.replace(isCourse ? "/tuitions" : "/learning-materials")
       } else {
         setEditing(false)
         setUploading(false)

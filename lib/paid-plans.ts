@@ -2,7 +2,7 @@
   plus: {
     name: "Plus",
     price: "$10",
-    priceDetail: "USD",
+    priceDetail: "USD one-time",
     description: "Organize your search as you compare tuition options.",
     features: [
       "Everything in Free",
@@ -22,3 +22,5 @@
     ],
   },
 }
+
+export type PaidPlan = keyof typeof paidPlans

@@ -9,14 +9,17 @@ import { useManagedResource } from "@/hooks/use-managed-resource"
 type Transaction = {
   _id: string; userName?: string; userEmail?: string; userRole?: "student" | "tutor";
   transactionId?: string; amount: number; currency: "usd"; planName: string;
-  paidAt?: string; date?: string; status?: "pending" | "paid" | "failed" | "expired"
+  paidAt?: string; date?: string; status?: "pending" | "paid" | "failed" | "expired" | "cancelled"
+  provider?: "mock" | "stripe"
 }
 const dollars = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" })
 const dates = new Intl.DateTimeFormat("en-BD", { dateStyle: "medium", timeZone: "Asia/Dhaka" })
 
 export function StripeTransactions({ personal = false }: { personal?: boolean }) {
   const [page, setPage] = useState(1)
-  const { data, error, reload } = useManagedResource<{ items: Transaction[]; hasMore: boolean }>(
+  const { data, error, reload } = useManagedResource<{
+    items: Transaction[]; hasMore: boolean; demoSubscription?: { plan: "free" | "plus" | "pro"; expiresAt: string | null }
+  }>(
     `/api/payments/${personal ? "history" : "transactions"}?page=${page}`,
   )
   return (
@@ -25,6 +28,13 @@ export function StripeTransactions({ personal = false }: { personal?: boolean })
         <h1 className="text-3xl font-bold">{personal ? "Payment history" : "Transactions"}</h1>
         <Button variant="outline" onClick={reload}>Refresh</Button>
       </div>
+      {personal && data?.demoSubscription && (
+        <div className="space-y-1 rounded-xl border bg-muted/40 p-4">
+          <p className="text-sm font-semibold">DEMO PAYMENT - NO REAL CHARGE</p>
+          <p>Demo plan: <span className="capitalize">{data.demoSubscription.plan}</span></p>
+          {data.demoSubscription.expiresAt && <p>Expires {dates.format(new Date(data.demoSubscription.expiresAt))}</p>}
+        </div>
+      )}
       {error ? <p role="alert">{error.message}</p> : !data ? <LoadingSkeleton label="Loading payments…" /> : data.items.length ? (
         <ul className="grid gap-3">
           {data.items.map((payment) => {
@@ -40,6 +50,7 @@ export function StripeTransactions({ personal = false }: { personal?: boolean })
               </div>
               <p className="mt-2 text-sm">
                 {personal ? <span className="capitalize">{payment.status}</span> : `${payment.planName} · ${payment.userRole === "tutor" ? "Teacher" : "Student"}`}
+                {personal && payment.provider === "mock" && " · Mock"}
                 {date && ` · ${dates.format(new Date(date))}`}
               </p>
               {payment.transactionId && <p className="mt-1 text-xs text-muted-foreground">Stripe transaction {payment.transactionId}</p>}
